@@ -222,7 +222,7 @@ if __name__ == "__main__":
                         default=0.0, help='The sleep time between packets.')
     parser.add_argument('--type', '-t', default="ints",
                         choices=["ints", "json"], help='The type of data sent')
-    parser.add_argument('--packet-loss-proba', '-l', type=int, default=0,
+    parser.add_argument('--packet-loss-proba', '-l', type=float, default=0,
                         help='The probability of a packet loss during transmission')
     parser.add_argument('--verbose', '-v', type=int, default=0,
                         choices=[0, 1, 2], help='The verbosity level of the program. 0 : Show nothing. 1 : Show only messages headers. 2 : Show all messages')
