@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+
 import sys
 import json
 import argparse
@@ -74,7 +75,7 @@ def generate(arguments):
 
     # MESSAGE GENERATION
     if str(payloadType) == "json":
-        message = json.dumps(open("../message.json", 'r').read())
+        message = json.dumps(open("message.json", 'r').read())
         message = json.loads(message)
     elif str(payloadType) == "ints":
         message = "0123456789"
@@ -197,7 +198,8 @@ if __name__ == "__main__":
                         help='w.x.y.z dest IPv4 address.')
     parser.add_argument('src_port', metavar='src-port', nargs=1, type=int,
                         help='1000 < port < 10 000')
-    parser.add_argument('dest_port', metavar='dest-port', nargs=1, type=int, help='1000 < port < 10 000')
+    parser.add_argument('dest_port', metavar='dest-port',
+                        nargs=1, type=int, help='1000 < port < 10 000')
     parser.add_argument('mtu', type=int, help='The packets MTU.')
     parser.add_argument('--packet-amount', '-n', type=int,
                         default=1, help='The number of packets to be sent')
