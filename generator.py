@@ -51,8 +51,8 @@ def generate(args):
     destination = args.dest_ip[0]
     sourcePort = int(args.src_port[0])
     destinationPort = int(args.dest_port[0])
-    nMessages = args.packet_amount
     mtu = args.mtu
+    nMessages = args.packet_amount
     sleepTime = args.sleep_time
     messageType = args.type
     discardProbability = args.packet_loss_proba
@@ -211,14 +211,14 @@ if __name__ == "__main__":
                         help='1000 < sourceport < 10 000')
     parser.add_argument('dest_port', metavar='dest-port', nargs=1, type=int,
                         help='1000 < destinationport < 10 000 and destinationport != sourceport')
-    parser.add_argument('mtu', type=int, 
-                        default=9000, help='The packets MTU.')
+    parser.add_argument('--mtu', '-m', type=int,
+                        default=1500, help='The packets MTU.')
     parser.add_argument('--packet-amount', '-n', type=int,
                         default=1, help='The number of packets to be sent')
     parser.add_argument('--sleep-time', '-s', type=float,
                         default=0.0, help='The sleep time between packets.')
     parser.add_argument('--type', '-t',
-                        default="ints", choices=["ints", "json"], help='The type of data sent')
+                        default="ints", choices=["ints", "json", "rand"], help='The type of data sent')
     parser.add_argument('--packet-loss-proba', '-l', type=float,
                         default=0, help='The probability of a packet loss during transmission')
     parser.add_argument('--verbose', '-v', type=int,
