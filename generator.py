@@ -46,8 +46,7 @@ class PAYLOAD(Packet):
 
 def generate(args):
 
-    # Setting vars
-
+    # SETTING VARIABLES
     source = args.src_ip[0]
     destination = args.dest_ip[0]
     sourcePort = int(args.src_port[0])
@@ -201,29 +200,29 @@ def generate(args):
 
 if __name__ == "__main__":
 
-    # argparse part and all it's components
-
-    parser = argparse.ArgumentParser(
-        description='Process scapy call arguments.')
+    # ARGPARSE
+    parser = argparse.ArgumentParser(description='Process scapy call arguments.')
+    
     parser.add_argument('src_ip', metavar='src-ip', nargs=1,
                         help='w.x.y.z source IPv4 address.')
     parser.add_argument('dest_ip', metavar='dest-ip', nargs=1,
                         help='w.x.y.z dest IPv4 address.')
     parser.add_argument('src_port', metavar='src-port', nargs=1, type=int,
-                        help='1000 < port < 10 000')
-    parser.add_argument('dest_port', metavar='dest-port',
-                        nargs=1, type=int, help='1000 < port < 10 000')
-    parser.add_argument('mtu', type=int, help='The packets MTU.')
+                        help='1000 < sourceport < 10 000')
+    parser.add_argument('dest_port', metavar='dest-port', nargs=1, type=int,
+                        help='1000 < destinationport < 10 000 and destinationport != sourceport')
+    parser.add_argument('mtu', type=int, 
+                        default=9000, help='The packets MTU.')
     parser.add_argument('--packet-amount', '-n', type=int,
                         default=1, help='The number of packets to be sent')
     parser.add_argument('--sleep-time', '-s', type=float,
                         default=0.0, help='The sleep time between packets.')
-    parser.add_argument('--type', '-t', default="ints",
-                        choices=["ints", "json"], help='The type of data sent')
-    parser.add_argument('--packet-loss-proba', '-l', type=float, default=0,
-                        help='The probability of a packet loss during transmission')
-    parser.add_argument('--verbose', '-v', type=int, default=0,
-                        choices=[0, 1, 2], help='The verbosity level of the program. 0 : Show nothing. 1 : Show only messages headers. 2 : Show all messages')
+    parser.add_argument('--type', '-t',
+                        default="ints", choices=["ints", "json"], help='The type of data sent')
+    parser.add_argument('--packet-loss-proba', '-l', type=float,
+                        default=0, help='The probability of a packet loss during transmission')
+    parser.add_argument('--verbose', '-v', type=int,
+                        default=0, choices=[0, 1, 2], help='The verbosity level of the program. 0 : only print control messages 1 : print control messages and headers 2 : print everything, including payload')
 
     args = parser.parse_args()
 
