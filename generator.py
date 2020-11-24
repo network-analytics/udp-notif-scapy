@@ -48,10 +48,10 @@ def generate(args):
 
     # Setting vars
 
-    source = args.src_ip
-    destination = args.dest_ip
-    sourcePort = args.src_port
-    destinationPort = args.dest_port
+    source = args.src_ip[0]
+    destination = args.dest_ip[0]
+    sourcePort = int(args.src_port[0])
+    destinationPort = int(args.dest_port[0])
     nMessages = args.packet_amount
     mtu = args.mtu
     sleepTime = args.sleep_time
