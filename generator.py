@@ -4,37 +4,27 @@ import sys
 import json
 import time
 import argparse
-import random as rd
+import random
 from scapy.all import *
 
-udpnhl = 12  # udp-notif header length
-ohl = 4  # option header length
-
-nSenders = 4
-mgids = []
-for i in range(nSenders):
-    mgids.append(2**((i) * 8) - 1)  # create an array of message generator ids
-index = {}
-for i in range(nSenders):
-    # dictionary with key = message generator ids and values = message id increment
-    index[mgids[i]] = 0
-
+udpn_header_length = 12
+opt_header_length = 4
 
 class UDPN(Packet):
     name = "UDPN"
-    fields_desc = [BitField("ver", 0, 3),  # Version ver
-                   BitField("spa", 0, 1),  # Space spa
-                   BitField("eTyp", 1, 4),  # Encoding Type encTyp
-                   BitField("hLen", udpnhl, 8),  # Header Length heaLen
-                   BitField("mLen", udpnhl, 16),  # Message Length msgLen
-                   BitField("msgGenID", 0, 32),  # Message-Generator-ID genID
-                   BitField("msgID", 0, 32), ]  # Message ID msgID
+    fields_desc = [BitField("ver", 0, 3),  # Version
+                   BitField("spa", 0, 1),  # Space
+                   BitField("eTyp", 1, 4),  # Encoding Type
+                   BitField("hLen", udpn_header_length, 8),  # Header Length
+                   BitField("mLen", udpn_header_length, 16),  # Message Length
+                   BitField("msgGenID", 0, 32),  # Message-Generator-ID
+                   BitField("msgID", 0, 32), ]  # Message ID
 
 
 class OPT(Packet):
     name = "OPT"
-    fields_desc = [BitField("type", 1, 8),  # Type typ
-                   BitField("optlen", ohl, 8),  # Length optLen
+    fields_desc = [BitField("type", 1, 8),  # Type
+                   BitField("optlen", opt_header_length, 8),  # Length optLen
                    BitField("fraNum", 0, 15),  # Fragment Number segNum
                    BitField("L", 0, 1), ]  # Last last
 
@@ -51,12 +41,20 @@ def generate(args):
     destination = args.dest_ip[0]
     sourcePort = int(args.src_port[0])
     destinationPort = int(args.dest_port[0])
+    initialGenerator = args.initial_generator
+    additionalGenerators = args.additional_generators
     mtu = args.mtu
     nMessages = args.packet_amount
     sleepTime = args.sleep_time
     messageType = args.type
     discardProbability = args.packet_loss_proba
     verbose = args.verbose
+    
+    message_generators = []
+    message_increments = {} # dictionary {key = message generator; value = message index for this message generator}
+    for i in range(1 + additionalGenerators):
+        message_generators.append(initialGenerator + i)
+        message_increments[message_generators[i]] = 0
 
     display = "none"
     if (verbose == 1):
@@ -70,15 +68,18 @@ def generate(args):
         print("sourcePort : ", sourcePort)
         print("destinationPort : ", destinationPort)
         print("nMessages : ", nMessages)
+        print("initialGenerator : ", initialGenerator)
+        print("additionalGenerators : ", additionalGenerators)
         print("mtu : ", mtu)
         print("sleepTime : ", sleepTime)
+        print("messageType : ", messageType)
         print("messageType : ", messageType)
         print("discardProbability : ", discardProbability)
         print("verbose : ", verbose)
 
     # MESSAGE GENERATION
     if messageType == "json":
-        message = json.dumps(open("message.json", 'r').read())
+        message = json.dumps(open("../message.json", 'r').read())
         message = json.loads(message)
     elif messageType == "ints":
         message = "0123456789"
@@ -86,28 +87,30 @@ def generate(args):
             message += message  # 2**10 times the integers string
     elif messageType == "rand":
         message = "0123456789"
-        for m in range(rd.randint(6, 12)):
+        for m in range(random.randint(6, 12)):
             message += message  # 2**randint(1,9) times the integers string
     else:
         # can't happen anymore
         pass
 
-    maxl = mtu - udpnhl  # maximum UDP length minus header bytes
+    maxl = mtu - udpn_header_length  # maximum UDP length minus header bytes
     for i in range(nMessages):
 
-        # CHANGE MESSAGE IF GENERATION MUST BE RANDOM
-        if messageType == "rand":
-            message = "0123456789"
-            for k in range(rd.randint(6, 12)):
-                message += message
-
         if i != 0:
+            # CHANGE MESSAGE IF GENERATION MUST BE RANDOM
+            if messageType == "rand":
+                message = "0123456789"
+                for k in range(random.randint(6, 12)):
+                    message += message
             time.sleep(sleepTime)
-        sender = mgids[rd.randint(0, 3)]
+        
+        # INCREMENT GENERATOR ONLY IF IT'S POSSIBLE
+        if i < len(message_generators):
+        	generator = message_generators[i]
 
         # CASE WITH SEGMENTATION
         if len(message) > maxl:
-            maxl = mtu - udpnhl - ohl
+            maxl = mtu - udpn_header_length - opt_header_length
             packet = IP(src=source, dst=destination)/UDP()/UDPN()/OPT()/PAYLOAD()
             packet[PAYLOAD].msg = message
             msg = packet[PAYLOAD].msg
@@ -119,9 +122,9 @@ def generate(args):
                 segment = packet
                 segment.sport = sourcePort
                 segment.dport = destinationPort
-                segment[UDPN].msgGenID = sender
-                segment[UDPN].msgID = index[sender]
-                segment[UDPN].hLen = udpnhl + ohl
+                segment[UDPN].msgGenID = generator
+                segment[UDPN].msgID = message_increments[generator]
+                segment[UDPN].hLen = udpn_header_length + opt_header_length
                 segment[OPT].fraNum = j
                 # if the message string from maxl * j to its end is bigger than max packet size, it isn't the last one
                 if (len(msg[maxl * j:]) > maxl):
@@ -134,7 +137,7 @@ def generate(args):
                     segment[UDPN].mLen = segment[UDPN].hLen + len(segment[PAYLOAD].msg)
                     segment[OPT].L = 1  # change last value
                     # increment index after sending the last segment of message
-                    index[sender] += 1
+                    message_increments[generator] += 1
 
                 if display == "header" or display == "all":
                     print("segment ", j, " ver = ", segment[UDPN].ver)
@@ -142,23 +145,21 @@ def generate(args):
                     print("segment ", j, " eTyp = ", segment[UDPN].eTyp)
                     print("segment ", j, " hLen = ", segment[UDPN].hLen)
                     print("segment ", j, " mLen = ", segment[UDPN].mLen)
-                    print("segment ", j, " msgGenID = ",
-                          segment[UDPN].msgGenID)
+                    print("segment ", j, " msgGenID = ", segment[UDPN].msgGenID)
                     print("segment ", j, " msgID ", segment[UDPN].msgID)
                     print("segment ", j, " type = ", segment[OPT].type)
                     print("segment ", j, " fraNum = ", segment[OPT].fraNum)
                     print("segment ", j, " optlen = ", segment[OPT].optlen)
                     print("segment ", j, " L = ", segment[OPT].L)
                     if display == "all":
-                        print("segment ", j, " msg = ",
-                              segment[PAYLOAD].msg.decode())
+                        print("segment ", j, " msg = ", segment[PAYLOAD].msg.decode())
                 elif display != "none":
                     pass
 
                 if (discardProbability == 0):
                     send(segment)
                     wrpcap('filtered.pcap', segment, append=True)
-                elif rd.randint(1, int(1 / discardProbability)) != 1:
+                elif random.randint(1, int(1 / discardProbability)) != 1:
                     send(segment)
                     wrpcap('filtered.pcap', segment, append=True)
                 else:
@@ -170,9 +171,9 @@ def generate(args):
             packet.dport = destinationPort
             packet[PAYLOAD].msg = message
             packet[UDPN].mLen = packet[UDPN].hLen + len(packet[PAYLOAD].msg)
-            packet[UDPN].msgGenID = sender
-            packet[UDPN].msgID = index[sender]
-            index[sender] += 1
+            packet[UDPN].msgGenID = generator
+            packet[UDPN].msgID = message_increments[generator]
+            message_increments[generator] += 1
             if display == "header" or display == "all":
                 print("packet ver = ", packet[UDPN].ver)
                 print("packet spa = ", packet[UDPN].spa)
@@ -189,7 +190,7 @@ def generate(args):
             if discardProbability == 0:
                 send(packet)
                 wrpcap('filtered.pcap', packet, append=True)
-            elif rd.randint(1, int(1 / discardProbability)) != 1:
+            elif random.randint(1, int(1 / discardProbability)) != 1:
                 send(packet)
                 wrpcap('filtered.pcap', packet, append=True)
             else:
@@ -203,6 +204,7 @@ if __name__ == "__main__":
     # ARGPARSE
     parser = argparse.ArgumentParser(description='Process scapy call arguments.')
     
+    # SOURCE AND DESTINATION DATA
     parser.add_argument('src_ip', metavar='src-ip', nargs=1,
                         help='w.x.y.z source IPv4 address.')
     parser.add_argument('dest_ip', metavar='dest-ip', nargs=1,
@@ -211,16 +213,25 @@ if __name__ == "__main__":
                         help='1000 < sourceport < 10 000')
     parser.add_argument('dest_port', metavar='dest-port', nargs=1, type=int,
                         help='1000 < destinationport < 10 000 and destinationport != sourceport')
-    parser.add_argument('--mtu', '-m', type=int,
-                        default=1500, help='The packets MTU.')
+    # GENERATORS IDS AND AMOUNT
+    parser.add_argument('--initial-generator', '-i', type=int,
+                        default=0, help='The identifier of the first message generator')
+    parser.add_argument('--additional-generators', '-a', type=int,
+                        default=0, help='Amount of message generators in addition to the first')
+    # PACKET TYPE AND AMOUNT
     parser.add_argument('--packet-amount', '-n', type=int,
                         default=1, help='The number of packets to be sent')
-    parser.add_argument('--sleep-time', '-s', type=float,
-                        default=0.0, help='The sleep time between packets.')
     parser.add_argument('--type', '-t',
                         default="ints", choices=["ints", "json", "rand"], help='The type of data sent')
+    # FORWARDING RULES
+    parser.add_argument('--mtu', '-m', type=int,
+                        default=1500, help='The packets MTU.')
+    parser.add_argument('--sleep-time', '-s', type=float,
+                        default=0.000, help='The sleep time between packets.')
+    # RANDOMNESS
     parser.add_argument('--packet-loss-proba', '-l', type=float,
-                        default=0, help='The probability of a packet loss during transmission')
+                        default=0.000, help='The probability of a packet loss during transmission')
+    # DISLAY CONTROL
     parser.add_argument('--verbose', '-v', type=int,
                         default=0, choices=[0, 1, 2], help='The verbosity level of the program. 0 : only print control messages 1 : print control messages and headers 2 : print everything, including payload')
 
