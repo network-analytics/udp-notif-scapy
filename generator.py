@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import os
 import sys
 import json
 import time
@@ -108,8 +109,7 @@ def generate(args):
         # CASE WITH SEGMENTATION
         if len(message) > maxl:
             maxl = mtu - udpnhl - ohl
-            packet = IP(src=source, dst=destination) / \
-                UDP()/UDPN()/OPT()/PAYLOAD()
+            packet = IP(src=source, dst=destination)/UDP()/UDPN()/OPT()/PAYLOAD()
             packet[PAYLOAD].msg = message
             msg = packet[PAYLOAD].msg
             nSegments = len(msg) // maxl
@@ -128,13 +128,11 @@ def generate(args):
                 if (len(msg[maxl * j:]) > maxl):
                     # then evaluate a full message size in the string
                     segment[PAYLOAD].msg = msg[maxl * j:maxl * (j + 1)]
-                    segment[UDPN].mLen = segment[UDPN].hLen + \
-                        len(segment[PAYLOAD].msg)
+                    segment[UDPN].mLen = segment[UDPN].hLen + len(segment[PAYLOAD].msg)
                 else:  # now it is the last one
                     # then evalutate whatever remains in the string, since it is equal to or lower than maxl * i
                     segment[PAYLOAD].msg = msg[maxl * j:]
-                    segment[UDPN].mLen = segment[UDPN].hLen + \
-                        len(segment[PAYLOAD].msg)
+                    segment[UDPN].mLen = segment[UDPN].hLen + len(segment[PAYLOAD].msg)
                     segment[OPT].L = 1  # change last value
                     # increment index after sending the last segment of message
                     index[sender] += 1
@@ -158,7 +156,7 @@ def generate(args):
                 elif display != "none":
                     pass
 
-                if discardProbability == 0:
+                if (discardProbability == 0):
                     send(segment)
                     wrpcap('filtered.pcap', segment, append=True)
                 elif rd.randint(1, int(1 / discardProbability)) != 1:
