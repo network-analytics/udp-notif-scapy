@@ -14,6 +14,7 @@ x             (INT)       destination port                            1000 < x <
 
 
 Optional arguments :
+
 -i x          (INT)       initial observation domain id               x >= 0                                              default 0
 
 -a x          (INT)       amount of additional observation domains    x >= 0                                              default 0
@@ -28,7 +29,7 @@ Optional arguments :
 
 -l f          (FLOAT)     segment loss probability                    0 <= x < 1                                          default 0
 
--r x | (INT) | forward segments in random order | x = 0 or x = 1 | default 0
+-r x (INT) forward segments in random order, x = 0 or x = 1, default 0
 
 -d s          (STR)       information display                         s = control or s = headers or s = everything        default control
 
