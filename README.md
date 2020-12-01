@@ -3,10 +3,15 @@
 This program implement the generation and forwarding of UDP-Notif packets according to the draft-ietf-netconf-udp-notif-01. It lets you build a traffic simulation with many parameters, which you can provide as arguments to generator.py.
 
 Necessary arguments :
+
 w.x.y.z       (IPV4)      source ip address                           0 <= w,x,y,z <= 255
+
 w.x.y.z       (IPV4)      destination ip address                      0 <= w,x,y,z <= 255
+
 x             (INT)       source port                                 1000 < x < 10000
+
 x             (INT)       destination port                            1000 < x < 10000
+
 
 Optional arguments :
 -i x          (INT)       initial observation domain id               x >= 0                                              default 0
