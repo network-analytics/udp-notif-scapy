@@ -15,13 +15,21 @@ x             (INT)       destination port                            1000 < x <
 
 Optional arguments :
 -i x          (INT)       initial observation domain id               x >= 0                                              default 0
+
 -a x          (INT)       amount of additional observation domains    x >= 0                                              default 0
+
 -t s          (STR)       type of payload data                        s = ints or s = json or s = rand                    default ints
+
 -n x          (INT)       amount of messages to send                  x >= 1                                              default 1
+
 -m x          (INT)       maximum transmission unit                   16 < x < 65535                                      default 1500
+
 -s f          (FLOAT)     sleep time between two messages             x > 0                                               default 0
+
 -l f          (FLOAT)     segment loss probability                    0 <= x < 1                                          default 0
--r x          (INT)       forward segments in random order            x = 0 or x = 1                                      default 0
+
+-r x | (INT) | forward segments in random order | x = 0 or x = 1 | default 0
+
 -d s          (STR)       information display                         s = control or s = headers or s = everything        default control
 
 Examples :
