@@ -235,7 +235,7 @@ if __name__ == "__main__":
     # RANDOMNESS
     parser.add_argument('--loss-probability', '-l', type=float,
                         default=0, help='Probability of a packet loss during transmission')
-    parser.add_argument('--random_order', '-r', type=int,
+    parser.add_argument('--random-order', '-r', type=int,
                         default=0, help='Whether the segments must be sent in a random order or not')
     # DISPLAY
     parser.add_argument('--display', '-d',
