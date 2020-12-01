@@ -1,175 +1,246 @@
 #!/usr/bin/python
+import os
 import sys
 import json
 import time
-import random as rd
+import argparse
+import random
 from scapy.all import *
 
-def error():
-    print("ERROR : wrong arguments, acceptable values are :")
-    """print("---- IPV4  source (w.x.y.z)")
-    print("---- IPV4  destination (w.x.y.z)")
-    print("---- INT   source port (1000 < x < 10 000)")
-    print("---- INT   destination port (1000 < y < 10 000, y != x)")"""
-    print("---- INT   packet amount, (x > 0)")
-    print("---- INT   MTU, (x > 18 if segmentation, x > 12 if single-packet message)")
-    print("---- FLOAT sleep time in seconds, (x >= 0)")
-    print("---- STR   message type, (x = ints or x = json)")
-    print("---- FLOAT probability to drop a packet / segment")
-    print("---- STR   display (x = none or x = all or x = header)")
-    exit(0)
-    return
-    
-udpnhl = 12 # udp-notif header length
-ohl = 4 # option header length
-
-nSenders = 4
-mgids = []
-for i in range(nSenders): mgids.append(2**((i) * 8) - 1) # create an array of message generator ids
-index = {}
-for i in range(nSenders): index[mgids[i]] = 0 # dictionary with key = message generator ids and values = message id increment
+UDPN_header_length = 12
+OPT_header_length = 4
 
 class UDPN(Packet):
     name = "UDPN"
-    fields_desc = [ BitField("ver", 0, 3), # Version ver
-                    BitField("spa", 0, 1), # Space spa
-                    BitField("eTyp", 1, 4), # Encoding Type encTyp
-                    BitField("hLen", udpnhl, 8), # Header Length heaLen
-                    BitField("mLen", udpnhl, 16), # Message Length msgLen
-                    BitField("msgGenID", 0, 32), # Message-Generator-ID genID
-                    BitField("msgID", 0, 32), ] # Message ID msgID
-                    
+    fields_desc = [BitField("version", 0, 3),
+                   BitField("space", 0, 1),
+                   BitField("encoding_type", 1, 4),
+                   BitField("header_length", UDPN_header_length, 8),
+                   BitField("message_length", UDPN_header_length, 16),
+                   BitField("observation_domain_id", 0, 32),
+                   BitField("message_id", 0, 32), ]
+
+
 class OPT(Packet):
     name = "OPT"
-    fields_desc = [ BitField("type", 1, 8), # Type typ
-                    BitField("optlen", ohl, 8), # Length optLen
-                    BitField("fraNum", 0, 15), # Fragment Number segNum
-                    BitField("L", 0, 1), ] # Last last
-                    
+    fields_desc = [BitField("type", 1, 8),
+                   BitField("option_length", OPT_header_length, 8),
+                   BitField("segment_id", 0, 15),
+                   BitField("last", 0, 1), ]
+
+
 class PAYLOAD(Packet):
     name = "PAYLOAD"
-    fields_desc = [ StrField("msg", "idle"), ] # Notification Message
+    fields_desc = [StrField("message", "idle"), ]
 
-def generate(nMessages, mtu, sleepTime, messageType, discardProbability, display):
-    source = "192.0.2.4"
-    destination = "192.0.2.2"
-    sourcePort = 9340
-    destinationPort = 9341
-    print("source : ", source)
-    print("destination : ", destination)
-    print("sourcePort : ", sourcePort)
-    print("destinationPort : ", destinationPort)
-    print("nMessages : ", nMessages)
-    print("mtu : ", mtu)
-    print("sleepTime : ", sleepTime)
-    print("messageType : ", messageType)
-    print("discardProbability : ", discardProbability)
-    print("display : ", display)
-    # MESSAGE GENERATION
-    if messageType == "json":
-        message = json.dumps(open("../message.json", 'r').read()); message = json.loads(message)
-    elif messageType == "ints":
-        message = "0123456789"
-        for n in range(10):
-            message += message # 2**10 times the integers string
-    elif messageType == "rand":
-        message = "0123456789"
-        for m in range(rd.randint(6, 12)):
-            message += message # 2**randint(1,9) times the integers string
-    else:
-        error()
+
+def generate(args):
+
+    # SOURCE AND DESTINATION DATA
+    source_ip = args.source_ip[0]
+    destination_ip = args.destination_ip[0]
+    source_port = int(args.source_port[0])
+    destination_port = int(args.destination_port[0])
+    # DOMAIN START VALUE AND AMOUNT
+    initial_domain = args.initial_domain
+    additional_domains = args.additional_domains
+    # MESSAGE TYPE AND AMOUNT
+    message_type = args.message_type
+    message_amount = args.message_amount
+    # FORWARDING RULES
+    MTU = args.MTU
+    sleep_time = args.sleep_time
+    # RANDOMNESS
+    loss_probability = args.loss_probability
+    random_order = args.random_order
+    # DISPLAY
+    display = args.display
     
-    maxl = mtu - udpnhl # maximum UDP length minus header bytes
-    for i in range(nMessages):
+    observation_domains = []
+    message_ids = {}
+    for i in range(1 + additional_domains):
+        observation_domains.append(initial_domain + i)
+        message_ids[observation_domains[i]] = 0
+
+    if (display != "control"):
+        # SOURCE AND DESTINATION DATA
+        print("source_ip : ", source_ip)
+        print("destination_ip : ", destination_ip)
+        print("source_port : ", source_port)
+        print("destination_port : ", destination_port)
+        # DOMAIN START VALUE AND AMOUNT
+        print("initial_domain : ", initial_domain)
+        print("additional_domains : ", additional_domains)
+        # MESSAGE TYPE AND AMOUNT
+        print("message_type : ", message_type)
+        print("message_amount : ", message_amount)
+        # FORWARDING RULES
+        print("MTU : ", MTU)
+        print("sleep_time : ", sleep_time)
+        # RANDOMNESS
+        print("loss_probability : ", loss_probability)
+        print("random_order : ", random_order)
+        # DISPLAY
+        print("display : ", display)
+
+    # MESSAGE GENERATION
+    if message_type == "json":
+        message = json.dumps(open("../message.json", 'r').read())
+        message = json.loads(message)
+    elif message_type == "ints":
+        message = "0123456789"
+        for i in range(10):
+            message += message
+    elif message_type == "rand":
+        message = "0123456789"
+        for i in range(random.randint(6, 12)):
+            message += message
+
+    maximum_length = MTU - UDPN_header_length
+    for message_increment in range(message_amount):
         
-        # CHANGE MESSAGE IF GENERATION MUST BE RANDOM
-        if messageType == "rand":
-            message = "0123456789"
-            for k in range(rd.randint(6, 12)):
-                message += message
+        segment_list = []
+
+        if message_increment != 0:
+            if message_type == "rand":
+                message = "0123456789"
+                for i in range(random.randint(6, 12)):
+                    message += message
+            time.sleep(sleep_time)
+        
+        if message_increment < len(observation_domains):
+            domain = observation_domains[message_increment]
+
+        # SEGMENTATION
+        if len(message) > maximum_length:
+            
+            maximum_length = MTU - UDPN_header_length - OPT_header_length
+            segment_amount = len(message) // maximum_length
+            if len(message) % maximum_length != 0:
+                segment_amount += 1
                 
-        if i != 0: time.sleep(sleepTime)
-        sender = mgids[rd.randint(0, 3)]
-        
-        # CASE WITH SEGMENTATION
-        if len(message) > maxl:
-            maxl = mtu - udpnhl - ohl
-            packet = IP(src = source, dst = destination)/UDP()/UDPN()/OPT()/PAYLOAD()
-            packet[PAYLOAD].msg = message
-            msg = packet[PAYLOAD].msg
-            nSegments = len(msg) // maxl
-            if len(msg) % maxl != 0: nSegments += 1 # if the whole division has a remainder, there will be one more segment that will not be full (this is the general case of course)
-            for j in range(nSegments):
-                segment = packet
-                segment.sport = sourcePort
-                segment.dport = destinationPort
-                segment[UDPN].msgGenID = sender
-                segment[UDPN].msgID = index[sender]
-                segment[UDPN].hLen = udpnhl + ohl
-                segment[OPT].fraNum = j
-                if (len(msg[maxl * j:]) > maxl): # if the message string from maxl * j to its end is bigger than max packet size, it isn't the last one
-                    segment[PAYLOAD].msg = msg[maxl * j:maxl * (j + 1)] # then evaluate a full message size in the string
-                    segment[UDPN].mLen = segment[UDPN].hLen + len(segment[PAYLOAD].msg)
-                else: # now it is the last one
-                    segment[PAYLOAD].msg = msg[maxl * j:] # then evalutate whatever remains in the string, since it is equal to or lower than maxl * i
-                    segment[UDPN].mLen = segment[UDPN].hLen + len(segment[PAYLOAD].msg)
-                    segment[OPT].L = 1 # change last value
-                    index[sender] += 1 # increment index after sending the last segment of message
-                if display == "header" or display == "all":
-                    print("segment ", j, " ver = ", segment[UDPN].ver)
-                    print("segment ", j, " spa = ", segment[UDPN].spa)
-                    print("segment ", j, " eTyp = ", segment[UDPN].eTyp)
-                    print("segment ", j, " hLen = ", segment[UDPN].hLen)
-                    print("segment ", j, " mLen = ", segment[UDPN].mLen)
-                    print("segment ", j, " msgGenID = ", segment[UDPN].msgGenID)
-                    print("segment ", j, " msgID ", segment[UDPN].msgID)
-                    print("segment ", j, " type = ", segment[OPT].type)
-                    print("segment ", j, " fraNum = ", segment[OPT].fraNum)
-                    print("segment ", j, " optlen = ", segment[OPT].optlen)
-                    print("segment ", j, " L = ", segment[OPT].L)
-                    if display == "all":
-                        print("segment ", j, " msg = ", segment[PAYLOAD].msg.decode())
-                elif display != "none":
-                    error()
-                if discardProbability == 0:
-                    send(segment)
-                    wrpcap('filtered.pcap', segment, append=True)
-                elif rd.randint(1, int(1 / discardProbability)) != 1:
-                    send(segment)
-                    wrpcap('filtered.pcap', segment, append=True)
+            for segment_increment in range(segment_amount):
+                segment = IP(src=source_ip, dst=destination_ip)/UDP()/UDPN()/OPT()/PAYLOAD()
+                segment.sport = source_port
+                segment.dport = destination_port
+                segment[UDPN].observation_domain_id = domain
+                segment[UDPN].message_id = message_ids[domain]
+                segment[UDPN].header_length = UDPN_header_length + OPT_header_length
+                segment[OPT].segment_id = segment_increment
+                if (len(message[maximum_length * segment_increment:]) > maximum_length):
+                    segment[PAYLOAD].message = message[maximum_length * segment_increment:maximum_length * (segment_increment + 1)]
+                    segment[UDPN].message_length = segment[UDPN].header_length + len(segment[PAYLOAD].message)
                 else:
-                    print("\n\n\nSEGMENT DROPPED\n\n\n")
-        # CASE WITHOUT SEGMENTATION
+                    segment[PAYLOAD].message = message[maximum_length * segment_increment:]
+                    segment[UDPN].message_length = segment[UDPN].header_length + len(segment[PAYLOAD].message)
+                    segment[OPT].last = 1
+                    message_ids[domain] += 1
+
+                if display != "control":
+                    # UPDN
+                    print("segment ", segment_increment, " version = ", segment[UDPN].version)
+                    print("segment ", segment_increment, " space = ", segment[UDPN].space)
+                    print("segment ", segment_increment, " encoding_type = ", segment[UDPN].encoding_type)
+                    print("segment ", segment_increment, " header_length = ", segment[UDPN].header_length)
+                    print("segment ", segment_increment, " message_length = ", segment[UDPN].message_length)
+                    print("segment ", segment_increment, " observation_domain_id = ", segment[UDPN].observation_domain_id)
+                    print("segment ", segment_increment, " message_id ", segment[UDPN].message_id)
+                    # OPT
+                    print("segment ", segment_increment, " type = ", segment[OPT].type)
+                    print("segment ", segment_increment, " option_length = ", segment[OPT].option_length)
+                    print("segment ", segment_increment, " segment_id = ", segment[OPT].segment_id)
+                    print("segment ", segment_increment, " last = ", segment[OPT].last)
+                    # PAYLOAD
+                    if display == "everything":
+                        print("segment ", segment_increment, " message = ", segment[PAYLOAD].message.decode())
+                    
+                segment_list.append(segment)
+                wrpcap('filtered.pcap', segment, append=True)
+                    
+        # NO SEGMENTATION
         else:
-            packet = IP(src = source, dst = destination)/UDP()/UDPN()/PAYLOAD()
-            packet.sport = sourcePort
-            packet.dport = destinationPort
-            packet[PAYLOAD].msg = message
-            packet[UDPN].mLen = packet[UDPN].hLen + len(packet[PAYLOAD].msg)
-            packet[UDPN].msgGenID = sender
-            packet[UDPN].msgID = index[sender]
-            index[sender] += 1
-            if display == "header" or display == "all":
-                print("packet ver = ", packet[UDPN].ver)
-                print("packet spa = ", packet[UDPN].spa)
-                print("packet eTyp = ", packet[UDPN].eTyp)
-                print("packet hLen = ", packet[UDPN].hLen)
-                print("packet mLen = ", packet[UDPN].mLen)
-                print("packet msgGenID = ", packet[UDPN].msgGenID)
-                print("packet msgID ", packet[UDPN].msgID)
-                if display == "all":
-                    print("packet msg = ", packet[PAYLOAD].msg.decode())
-            elif display != "none":
-                error()
-            if discardProbability == 0:
+            packet = IP(src=source_ip, dst=destination_ip)/UDP()/UDPN()/PAYLOAD()
+            packet.sport = source_port
+            packet.dport = destination_port
+            packet[PAYLOAD].message = message
+            packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
+            packet[UDPN].observation_domain_id = domain
+            packet[UDPN].message_id = message_ids[domain]
+            message_ids[domain] += 1
+            if display != "control":
+                # UDPN
+                print("packet version = ", packet[UDPN].version)
+                print("packet space = ", packet[UDPN].space)
+                print("packet encoding_type = ", packet[UDPN].encoding_type)
+                print("packet header_length = ", packet[UDPN].header_length)
+                print("packet message_length = ", packet[UDPN].message_length)
+                print("packet observation_domain_id = ", packet[UDPN].observation_domain_id)
+                print("packet message_id = ", packet[UDPN].message_id)
+                # PAYLOAD
+                if display == "everything":
+                    print("packet message = ", packet[PAYLOAD].message.decode())
+
+            if loss_probability == 0:
                 send(packet)
                 wrpcap('filtered.pcap', packet, append=True)
-            elif rd.randint(1, int(1 / discardProbability)) != 1:
+            elif random.randint(1, int(1 / loss_probability)) != 1:
                 send(packet)
                 wrpcap('filtered.pcap', packet, append=True)
             else:
-                print("\n\n\nPACKET DROPPED\n\n\n")
-        print("Notification message ", str(i), " sent")
+                print("PACKET ", str(packet[UDPN].message_id)," LOST")
+                
+        if (random_order == 1):
+            random.shuffle(segment_list)
+        
+        for i in range(len(segment_list)):
+            if (loss_probability == 0):
+                send(segment_list[i])
+            elif random.randint(1, int(1000 * (1 / loss_probability))) >= 1000:
+                send(segment_list[i])
+            else:
+                print("SEGMENT ", str(segment_list[i][OPT].segment_id), " FROM MESSAGE ", str(segment_list[i][UDPN].message_id)," LOST")
+        print("NOTIFICATION MESSAGE ", str(message_increment), " SENT")
     return
 
-generate(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), str(sys.argv[4]), float(sys.argv[5]), str(sys.argv[6]))
+
+if __name__ == "__main__":
+
+    # ARGPARSE
+    parser = argparse.ArgumentParser(description='Process scapy call arguments.')
+    
+    # SOURCE AND DESTINATION DATA
+    parser.add_argument('source_ip', metavar='source-ip', nargs=1,
+                        help='w.x.y.z source IPv4 address.')
+    parser.add_argument('destination_ip', metavar='destination-ip', nargs=1,
+                        help='w.x.y.z dest IPv4 address.')
+    parser.add_argument('source_port', metavar='source-port', nargs=1, type=int,
+                        help='1000 < source_port < 10 000')
+    parser.add_argument('destination_port', metavar='destination-port', nargs=1, type=int,
+                        help='1000 < destination_port < 10 000 and destination_port != source_port')
+    # DOMAIN START VALUE AND AMOUNT
+    parser.add_argument('--initial-domain', '-i', type=int,
+                        default=0, help='Identifier of the initial observation domain')
+    parser.add_argument('--additional-domains', '-a', type=int,
+                        default=0, help='Amount of observation domains in addition to the first')
+    # MESSAGE TYPE AND AMOUNT
+    parser.add_argument('--message-type', '-t',
+                        default="ints", choices=["ints", "json", "rand"], help='The type of data sent')
+    parser.add_argument('--message-amount', '-n', type=int,
+                        default=1, help='Amount of notification messages to send')
+    # FORWARDING RULES
+    parser.add_argument('--MTU', '-m', type=int,
+                        default=1500, help='Maximum Transmission Unit')
+    parser.add_argument('--sleep-time', '-s', type=float,
+                        default=0, help='Sleep time between sending two notification messages')
+    # RANDOMNESS
+    parser.add_argument('--loss-probability', '-l', type=float,
+                        default=0, help='Probability of a packet loss during transmission')
+    parser.add_argument('--random-order', '-r', type=int,
+                        default=0, help='Whether the segments must be sent in a random order or not')
+    # DISPLAY
+    parser.add_argument('--display', '-d',
+                        default="control", choices=["control", "headers", "everything"], help='Information display, from only control messages to payloads')
+
+    args = parser.parse_args()
+
+    generate(args)
