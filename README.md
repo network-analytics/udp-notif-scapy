@@ -4,34 +4,34 @@ This program implement the generation and forwarding of UDP-Notif packets accord
 
 Necessary arguments :
 
-w.x.y.z       (IPV4)      source ip address                           0 <= w,x,y,z <= 255
+w.x.y.z (IPV4) source ip address, 0 <= w,x,y,z <= 255
 
-w.x.y.z       (IPV4)      destination ip address                      0 <= w,x,y,z <= 255
+w.x.y.z (IPV4) destination ip address, 0 <= w,x,y,z <= 255
 
-x             (INT)       source port                                 1000 < x < 10000
+x (INT) source port, 1000 < x < 10000
 
-x             (INT)       destination port                            1000 < x < 10000
+x (INT) destination port, 1000 < x < 10000
 
 
 Optional arguments :
 
--i x          (INT)       initial observation domain id               x >= 0                                              default 0
+-i x (INT) initial observation domain id, x >= 0, default 0
 
--a x          (INT)       amount of additional observation domains    x >= 0                                              default 0
+-a x (INT) amount of additional observation domains, x >= 0, default 0
 
--t s          (STR)       type of payload data                        s = ints or s = json or s = rand                    default ints
+-t s (STR) type of payload data, s = ints or s = json or s = rand, default ints
 
--n x          (INT)       amount of messages to send                  x >= 1                                              default 1
+-n x (INT) amount of messages to send, x >= 1, default 1
 
--m x          (INT)       maximum transmission unit                   16 < x < 65535                                      default 1500
+-m x (INT) maximum transmission unit, 16 < x < 65535, default 1500
 
--s f          (FLOAT)     sleep time between two messages             x > 0                                               default 0
+-s f (FLOAT) sleep time between two messages, x > 0, default 0
 
--l f          (FLOAT)     segment loss probability                    0 <= x < 1                                          default 0
+-l f (FLOAT) segment loss probability, 0 <= x < 1, default 0
 
 -r x (INT) forward segments in random order, x = 0 or x = 1, default 0
 
--d s          (STR)       information display                         s = control or s = headers or s = everything        default control
+-d s (STR) information display, s = control or s = headers or s = everything, default control
 
 Examples :
 
