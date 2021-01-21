@@ -42,3 +42,6 @@ sudo python3 generator.py 0.0.0.0 127.0.0.1 3456 3457
 sudo python3 generator.py 0.0.0.0 127.0.0.1 3456 3457 -n 2 -r 1 -t json -i 10 -a 1 -l 0.1 -s 1 -d headers
 
 2 messages of 5 shuffled segments of size 1500 with a json payload, from observation domains 10 and 11, with 0.1 loss probability and 1 second sleep time between messages, displaying control messages and segment headers
+
+### Launch multiple simulations
+- `./launch_multiple.sh <number_messages>` : launches multiple instances of the generator simuling multiple source ips and ports
