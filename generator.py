@@ -85,7 +85,7 @@ def generate(args):
 
     # MESSAGE GENERATION
     if message_type == "json":
-        message = json.dumps(open("../message.json", 'r').read())
+        message = json.dumps(open("./message.json", 'r').read())
         message = json.loads(message)
     elif message_type == "ints":
         message = "0123456789"
@@ -199,7 +199,7 @@ def generate(args):
                 send(segment_list[i])
             else:
                 print("SEGMENT ", str(segment_list[i][OPT].segment_id), " FROM MESSAGE ", str(segment_list[i][UDPN].message_id)," LOST")
-        print("NOTIFICATION MESSAGE ", str(message_increment), " SENT")
+        print("NOTIFICATION MESSAGE", str(message_increment), "SENT")
     return
 
 
