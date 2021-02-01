@@ -45,3 +45,9 @@ sudo python3 generator.py 192.168.0.2 192.168.0.2 3456 3457 -n 2 -r 1 -t json -i
 
 ### Launch multiple simulations
 - `./launch_multiple.sh <number_messages>` : launches multiple instances of the generator simuling multiple source ips and ports
+
+Docker barbaric commands :
+
+docker run -itd -p 9340:9340/udp scapy_worker python generator.py 192.168.1.10 192.168.1.10 9340 9341 -n 1000 -m 1024 -l 0.02 -r 1
+
+CMD [ "python", "./generator.py", "192.168.1.10", "192.168.1.10", "9340", "9341", "-n 1000", "-m 1024", "-l 0.02", "-r 1" ]
