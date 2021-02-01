@@ -181,10 +181,10 @@ def generate(args):
                     print("packet message = ", packet[PAYLOAD].message.decode())
 
             if loss_probability == 0:
-                send(packet)
+                send(packet, verbose=0)
                 wrpcap('filtered.pcap', packet, append=True)
             elif random.randint(1, int(1 / loss_probability)) != 1:
-                send(packet)
+                send(packet, verbose=0)
                 wrpcap('filtered.pcap', packet, append=True)
             else:
                 print("PACKET ", str(packet[UDPN].message_id)," LOST")
@@ -194,12 +194,12 @@ def generate(args):
         
         for i in range(len(segment_list)):
             if (loss_probability == 0):
-                send(segment_list[i])
+                send(segment_list[i], verbose=0)
             elif random.randint(1, int(1000 * (1 / loss_probability))) >= 1000:
-                send(segment_list[i])
+                send(segment_list[i], verbose=0)
             else:
                 print("SEGMENT ", str(segment_list[i][OPT].segment_id), " FROM MESSAGE ", str(segment_list[i][UDPN].message_id)," LOST")
-        print("NOTIFICATION MESSAGE", str(message_increment), "SENT")
+        # print("NOTIFICATION MESSAGE", str(message_increment), "SENT")
     return
 
 
