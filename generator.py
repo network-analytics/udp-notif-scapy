@@ -35,6 +35,9 @@ class PAYLOAD(Packet):
 
 
 def generate(args):
+    
+    start = time.time()
+    npackets = 0
 
     # SOURCE AND DESTINATION DATA
     source_ip = args.source_ip[0]
@@ -47,8 +50,11 @@ def generate(args):
     # MESSAGE TYPE AND AMOUNT
     message_type = args.message_type
     message_amount = args.message_amount
+    # INFINITE MESSAGES
+    if message_amount == 0:
+        message_amount = float('inf')
     # FORWARDING RULES
-    MTU = args.MTU
+    mtu = args.mtu
     sleep_time = args.sleep_time
     # RANDOMNESS
     loss_probability = args.loss_probability
@@ -75,7 +81,7 @@ def generate(args):
         print("message_type : ", message_type)
         print("message_amount : ", message_amount)
         # FORWARDING RULES
-        print("MTU : ", MTU)
+        print("mtu : ", mtu)
         print("sleep_time : ", sleep_time)
         # RANDOMNESS
         print("loss_probability : ", loss_probability)
@@ -89,15 +95,21 @@ def generate(args):
         message = json.loads(message)
     elif message_type == "ints":
         message = "0123456789"
-        for i in range(10):
+        for i in range(6):
             message += message
     elif message_type == "rand":
         message = "0123456789"
         for i in range(random.randint(6, 12)):
             message += message
 
-    maximum_length = MTU - UDPN_header_length
-    for message_increment in range(message_amount):
+    maximum_length = mtu - UDPN_header_length
+    
+    message_increment = 0
+    
+    while message_increment < message_amount:
+    
+    #for message_increment in range(message_amount):
+        message_increment += 1
         
         segment_list = []
 
@@ -108,13 +120,12 @@ def generate(args):
                     message += message
             time.sleep(sleep_time)
         
-        if message_increment < len(observation_domains):
-            domain = observation_domains[message_increment]
+        domain = observation_domains[message_increment%len(observation_domains)]
 
         # SEGMENTATION
         if len(message) > maximum_length:
             
-            maximum_length = MTU - UDPN_header_length - OPT_header_length
+            maximum_length = mtu - UDPN_header_length - OPT_header_length
             segment_amount = len(message) // maximum_length
             if len(message) % maximum_length != 0:
                 segment_amount += 1
@@ -182,9 +193,11 @@ def generate(args):
 
             if loss_probability == 0:
                 send(packet, verbose=0)
+                npackets += 1
                 wrpcap('filtered.pcap', packet, append=True)
             elif random.randint(1, int(1 / loss_probability)) != 1:
                 send(packet, verbose=0)
+                npackets += 1
                 wrpcap('filtered.pcap', packet, append=True)
             else:
                 print("PACKET ", str(packet[UDPN].message_id)," LOST")
@@ -195,11 +208,16 @@ def generate(args):
         for i in range(len(segment_list)):
             if (loss_probability == 0):
                 send(segment_list[i], verbose=0)
+                npackets += 1
             elif random.randint(1, int(1000 * (1 / loss_probability))) >= 1000:
                 send(segment_list[i], verbose=0)
+                npackets += 1
             else:
                 print("SEGMENT ", str(segment_list[i][OPT].segment_id), " FROM MESSAGE ", str(segment_list[i][UDPN].message_id)," LOST")
         # print("NOTIFICATION MESSAGE", str(message_increment), "SENT")
+    end = time.time()
+    duration = end - start
+    print(str(duration), str(npackets))
     return
 
 
@@ -228,7 +246,7 @@ if __name__ == "__main__":
     parser.add_argument('--message-amount', '-n', type=int,
                         default=1, help='Amount of notification messages to send')
     # FORWARDING RULES
-    parser.add_argument('--MTU', '-m', type=int,
+    parser.add_argument('--mtu', '-m', type=int,
                         default=1500, help='Maximum Transmission Unit')
     parser.add_argument('--sleep-time', '-s', type=float,
                         default=0, help='Sleep time between sending two notification messages')
