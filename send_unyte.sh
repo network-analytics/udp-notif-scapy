@@ -19,4 +19,4 @@ else
 fi
 
 # Call the python script with sudo and the path to access scapy
-sudo  /usr/bin/python3 generator.py $args
+sudo  /usr/bin/python3 main.py $args

@@ -18,11 +18,11 @@ else
 fi
 
 echo "Sending $message messages"
-sudo python3 generator.py -n $message 192.168.42.34 192.168.42.34 6666 8081 &
-sudo python3 generator.py -n $message 192.168.42.34 192.168.42.34 5321 8081 &
-sudo python3 generator.py -n $message 192.168.42.34 192.168.42.34 5322 8081 &
-sudo python3 generator.py -n $message 192.168.42.34 192.168.42.34 5323 8081 &
-#sudo python3 generator.py -n $message 192.168.42.34 192.168.42.34 5322 8081 &
-#sudo python3 generator.py -n $message 192.168.42.34 192.168.42.34 5323 8081 &
-#sudo python3 generator.py -n $message 192.168.42.34 192.168.42.34 5320 8081 &
-#sudo python3 generator.py -n $message 192.168.42.34 192.168.42.34 5321 8081 &
+sudo python3 main.py -n $message 192.168.42.34 192.168.42.34 6666 8081 &
+sudo python3 main.py -n $message 192.168.42.34 192.168.42.34 5321 8081 &
+sudo python3 main.py -n $message 192.168.42.34 192.168.42.34 5322 8081 &
+sudo python3 main.py -n $message 192.168.42.34 192.168.42.34 5323 8081 &
+#sudo python3 main.py -n $message 192.168.42.34 192.168.42.34 5322 8081 &
+#sudo python3 main.py -n $message 192.168.42.34 192.168.42.34 5323 8081 &
+#sudo python3 main.py -n $message 192.168.42.34 192.168.42.34 5320 8081 &
+#sudo python3 main.py -n $message 192.168.42.34 192.168.42.34 5321 8081 &
