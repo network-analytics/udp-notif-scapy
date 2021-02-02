@@ -1,6 +1,7 @@
 from scapy.all import Packet, BitField
 from .unyte_global import UDPN_header_length, OPT_header_length
 
+
 class UDPN(Packet):
     name = "UDPN"
     fields_desc = [BitField("version", 0, 3),

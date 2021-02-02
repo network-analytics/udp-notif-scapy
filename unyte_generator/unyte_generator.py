@@ -1,8 +1,8 @@
 import time
-import json
-import random
 import logging
 import os
+import random
+from unyte_generator.utils.unyte_message_gen import mock_message_generator
 from unyte_generator.models.unyte_global import UDPN_header_length, OPT_header_length
 from unyte_generator.models.udpn import UDPN
 from unyte_generator.models.opt import OPT
@@ -30,6 +30,8 @@ class udp_notif_generator:
         self.random_order = args.random_order
         self.display = args.display
 
+        self.mock_generator = mock_message_generator()
+
         self.pid = os.getpid()
         self.wrpcap_enabled = True  # TODO: save from args
         self.set_logger_level(self.display)
@@ -41,7 +43,6 @@ class udp_notif_generator:
         elif display == 'headers':
             logging.basicConfig(format='[%(levelname)s] (' + str(self.pid) + '): %(message)s', level=logging.INFO)
         else:
-            # logging.basicConfig(format='[%(levelname)s] (' + str(self.pid) + '): %(message)s', level=logging.INFO)
             logging.disable()
 
     def log_used_args(self):
@@ -80,20 +81,8 @@ class udp_notif_generator:
         if self.wrpcap_enabled:
             wrpcap(filename, packet, append=True)
 
-    def generate_message(self, message_type):
-        if message_type == "json":
-            message = json.dumps(open("./message.json", 'r').read())
-            return json.loads(message)
-        elif message_type == "ints":
-            message = "0123456789"
-            for _ in range(6):
-                message += message
-            return message
-        elif message_type == "rand":
-            message = "0123456789"
-            for _ in range(random.randint(6, 12)):
-                message += message
-            return message
+    def generate_mock_message(self):
+        return self.mock_generator.generate_message(self.message_type)
 
     def send_udp_notif(self):
 
@@ -107,7 +96,7 @@ class udp_notif_generator:
 
         self.log_used_args()
 
-        message = self.generate_message(self.message_type)
+        message = self.generate_mock_message()
 
         maximum_length = self.mtu - UDPN_header_length
 
@@ -120,10 +109,9 @@ class udp_notif_generator:
             segment_list = []
 
             if message_increment != 0:
+                # TODO: may be a better way to do that ?
                 if self.message_type == "rand":
-                    message = "0123456789"
-                    for i in range(random.randint(6, 12)):
-                        message += message
+                    message = self.generate_mock_message()
                 time.sleep(self.sleep_time)
 
             domain = observation_domains[message_increment % len(observation_domains)]
@@ -160,7 +148,7 @@ class udp_notif_generator:
 
             # NO SEGMENTATION
             else:
-                packet = IP(src=self.source_ip,dst=self.destination_ip)/UDP()/UDPN()/PAYLOAD()
+                packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/PAYLOAD()
                 packet.sport = self.source_port
                 packet.dport = self.destination_port
                 packet[PAYLOAD].message = message

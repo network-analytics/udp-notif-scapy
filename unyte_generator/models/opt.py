@@ -1,6 +1,7 @@
 from scapy.all import Packet, BitField
 from .unyte_global import OPT_header_length
 
+
 class OPT(Packet):
     name = "OPT"
     fields_desc = [BitField("type", 1, 8),
