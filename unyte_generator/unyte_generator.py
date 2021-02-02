@@ -29,8 +29,9 @@ class udp_notif_generator:
         self.loss_probability = args.loss_probability
         self.random_order = args.random_order
         self.display = args.display
-        self.pid = os.getpid()
 
+        self.pid = os.getpid()
+        self.wrpcap_enabled = True  # TODO: save from args
         self.set_logger_level(self.display)
         logging.info("Unyte scapy generator launched")
 
@@ -75,6 +76,25 @@ class udp_notif_generator:
         logging.debug("segment " + str(segment_increment) + " message = " + str(segment[PAYLOAD].message.decode()))
         logging.info("------------ end segment ------------")
 
+    def save_pcap(self, filename, packet):
+        if self.wrpcap_enabled:
+            wrpcap(filename, packet, append=True)
+
+    def generate_message(self, message_type):
+        if message_type == "json":
+            message = json.dumps(open("./message.json", 'r').read())
+            return json.loads(message)
+        elif message_type == "ints":
+            message = "0123456789"
+            for _ in range(6):
+                message += message
+            return message
+        elif message_type == "rand":
+            message = "0123456789"
+            for _ in range(random.randint(6, 12)):
+                message += message
+            return message
+
     def send_udp_notif(self):
 
         start = time.time()
@@ -85,21 +105,9 @@ class udp_notif_generator:
             observation_domains.append(self.initial_domain + i)
             message_ids[observation_domains[i]] = 0
 
-        if (self.display != "control"):
-            self.log_used_args()
+        self.log_used_args()
 
-        # MESSAGE GENERATION
-        if self.message_type == "json":
-            message = json.dumps(open("./message.json", 'r').read())
-            message = json.loads(message)
-        elif self.message_type == "ints":
-            message = "0123456789"
-            for i in range(6):
-                message += message
-        elif self.message_type == "rand":
-            message = "0123456789"
-            for i in range(random.randint(6, 12)):
-                message += message
+        message = self.generate_message(self.message_type)
 
         maximum_length = self.mtu - UDPN_header_length
 
@@ -107,7 +115,6 @@ class udp_notif_generator:
 
         while message_increment < self.message_amount:
 
-            # for message_increment in range(message_amount):
             message_increment += 1
 
             segment_list = []
@@ -119,8 +126,7 @@ class udp_notif_generator:
                         message += message
                 time.sleep(self.sleep_time)
 
-            domain = observation_domains[message_increment % len(
-                observation_domains)]
+            domain = observation_domains[message_increment % len(observation_domains)]
 
             # SEGMENTATION
             if len(message) > maximum_length:
@@ -136,35 +142,29 @@ class udp_notif_generator:
                     segment.dport = self.destination_port
                     segment[UDPN].observation_domain_id = domain
                     segment[UDPN].message_id = message_ids[domain]
-                    segment[UDPN].header_length = UDPN_header_length + \
-                        OPT_header_length
+                    segment[UDPN].header_length = UDPN_header_length + OPT_header_length
                     segment[OPT].segment_id = segment_increment
                     if (len(message[maximum_length * segment_increment:]) > maximum_length):
-                        segment[PAYLOAD].message = message[maximum_length *
-                                                           segment_increment:maximum_length * (segment_increment + 1)]
-                        segment[UDPN].message_length = segment[UDPN].header_length + \
-                            len(segment[PAYLOAD].message)
+                        segment[PAYLOAD].message = message[maximum_length * segment_increment:maximum_length * (segment_increment + 1)]
+                        segment[UDPN].message_length = segment[UDPN].header_length + len(segment[PAYLOAD].message)
                     else:
                         segment[PAYLOAD].message = message[maximum_length * segment_increment:]
-                        segment[UDPN].message_length = segment[UDPN].header_length + \
-                            len(segment[PAYLOAD].message)
+                        segment[UDPN].message_length = segment[UDPN].header_length + len(segment[PAYLOAD].message)
                         segment[OPT].last = 1
                         message_ids[domain] += 1
 
                     self.log_segment(segment_increment, segment)
 
                     segment_list.append(segment)
-                    wrpcap('filtered.pcap', segment, append=True)
+                    self.save_pcap('filtered.pcap', segment)
 
             # NO SEGMENTATION
             else:
-                packet = IP(src=self.source_ip,
-                            dst=self.destination_ip)/UDP()/UDPN()/PAYLOAD()
+                packet = IP(src=self.source_ip,dst=self.destination_ip)/UDP()/UDPN()/PAYLOAD()
                 packet.sport = self.source_port
                 packet.dport = self.destination_port
                 packet[PAYLOAD].message = message
-                packet[UDPN].message_length = packet[UDPN].header_length + \
-                    len(packet[PAYLOAD].message)
+                packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
                 packet[UDPN].observation_domain_id = domain
                 packet[UDPN].message_id = message_ids[domain]
                 message_ids[domain] += 1
@@ -174,13 +174,14 @@ class udp_notif_generator:
                 if self.loss_probability == 0:
                     send(packet, verbose=0)
                     npackets += 1
-                    wrpcap('filtered.pcap', packet, append=True)
+
+                    self.save_pcap('filtered.pcap', packet)
                 elif random.randint(1, int(1 / self.loss_probability)) != 1:
                     send(packet, verbose=0)
                     npackets += 1
-                    wrpcap('filtered.pcap', packet, append=True)
+                    self.save_pcap('filtered.pcap', packet)
                 else:
-                    print("PACKET ", str(packet[UDPN].message_id), " LOST")
+                    logging.info("simulating packet " + str(packet[UDPN].message_id) + " lost")
 
             if (self.random_order == 1):
                 random.shuffle(segment_list)
@@ -193,10 +194,9 @@ class udp_notif_generator:
                     send(segment_list[i], verbose=0)
                     npackets += 1
                 else:
-                    print("SEGMENT ", str(segment_list[i][OPT].segment_id), " FROM MESSAGE ", str(
-                        segment_list[i][UDPN].message_id), " LOST")
-            # print("NOTIFICATION MESSAGE", str(message_increment), "SENT")
+                    logging.info("simulating segment " + str(segment_list[i][OPT].segment_id) +
+                                 " from message " + str(segment_list[i][UDPN].message_id) + " lost")
         end = time.time()
         duration = end - start
-        print(str(duration), str(npackets))
+        logging.info('Sent ' + str(npackets) + ' in ' + str(duration))
         return
