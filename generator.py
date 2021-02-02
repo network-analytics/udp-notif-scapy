@@ -5,34 +5,12 @@ import json
 import time
 import argparse
 import random
-from scapy.all import *
+from unyte_generator.models.unyte_global import UDPN_header_length, OPT_header_length
+from unyte_generator.models.udpn import UDPN
+from unyte_generator.models.opt import OPT
+from unyte_generator.models.payload import PAYLOAD
 
-UDPN_header_length = 12
-OPT_header_length = 4
-
-class UDPN(Packet):
-    name = "UDPN"
-    fields_desc = [BitField("version", 0, 3),
-                   BitField("space", 0, 1),
-                   BitField("encoding_type", 1, 4),
-                   BitField("header_length", UDPN_header_length, 8),
-                   BitField("message_length", UDPN_header_length, 16),
-                   BitField("observation_domain_id", 0, 32),
-                   BitField("message_id", 0, 32), ]
-
-
-class OPT(Packet):
-    name = "OPT"
-    fields_desc = [BitField("type", 1, 8),
-                   BitField("option_length", OPT_header_length, 8),
-                   BitField("segment_id", 0, 15),
-                   BitField("last", 0, 1), ]
-
-
-class PAYLOAD(Packet):
-    name = "PAYLOAD"
-    fields_desc = [StrField("message", "idle"), ]
-
+from scapy.all import IP, UDP, send, wrpcap
 
 def generate(args):
     

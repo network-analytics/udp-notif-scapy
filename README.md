@@ -1,4 +1,4 @@
-# scapy
+# Scapy
 
 This program implement the generation and forwarding of UDP-Notif packets according to the draft-ietf-netconf-udp-notif-01. It lets you build a traffic simulation with many parameters, which you can provide as arguments to generator.py.
 
@@ -15,23 +15,23 @@ x (INT) destination port, 1000 < x < 10000
 
 Optional arguments :
 
--i x (INT) initial observation domain id, x >= 0, default 0
+`-i x` : (INT) initial observation domain id, x >= 0, default 0
 
--a x (INT) amount of additional observation domains, x >= 0, default 0
+`-a x` : (INT) amount of additional observation domains, x >= 0, default 0
 
--t s (STR) type of payload data, s = ints or s = json or s = rand, default ints
+`-t s` : (STR) type of payload data, s = ints or s = json or s = rand, default ints
 
--n x (INT) amount of messages to send, x >= 1, default 1
+`-n x` : (INT) amount of messages to send, x >= 1, default 1
 
--m x (INT) maximum transmission unit, 16 < x < 65535, default 1500
+`-m x` : (INT) maximum transmission unit, 16 < x < 65535, default 1500
 
--s f (FLOAT) sleep time between two messages, x > 0, default 0
+`-s f` : (FLOAT) sleep time between two messages, x > 0, default 0
 
--l f (FLOAT) segment loss probability, 0 <= x < 1, default 0
+`-l f` : (FLOAT) segment loss probability, 0 <= x < 1, default 0
 
--r x (INT) forward segments in random order, x = 0 or x = 1, default 0
+`-r x` : (INT) forward segments in random order, x = 0 or x = 1, default 0
 
--d s (STR) information display, s = control or s = headers or s = everything, default control
+`-d s` : (STR) information display, s = control or s = headers or s = everything, default control
 
 Examples :
 
@@ -45,9 +45,3 @@ sudo python3 generator.py 192.168.0.2 192.168.0.2 3456 3457 -n 2 -r 1 -t json -i
 
 ### Launch multiple simulations
 - `./launch_multiple.sh <number_messages>` : launches multiple instances of the generator simuling multiple source ips and ports
-
-Docker barbaric commands :
-
-docker run -itd -p 9340:9340/udp scapy_worker python generator.py 192.168.1.10 192.168.1.10 9340 9341 -n 1000 -m 1024 -l 0.02 -r 1
-
-CMD [ "python", "./generator.py", "192.168.1.10", "192.168.1.10", "9340", "9341", "-n 1000", "-m 1024", "-l 0.02", "-r 1" ]
