@@ -18,5 +18,7 @@ else
   echo "No filtered.pcap file to remove."
 fi
 
+SOURCE_FOLDER=../src
+
 # Call the python script with sudo and the path to access scapy
-sudo  /usr/bin/python3 main.py $args
+sudo  /usr/bin/python3 $SOURCE_FOLDER/main.py $args

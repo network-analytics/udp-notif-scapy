@@ -20,12 +20,14 @@ fi
 DEST_IP="192.168.42.34"
 DEST_PORT="8081"
 
+SOURCE_FOLDER=../src
+
 echo "Sending $message messages"
-sudo python3 main.py -n $message 192.168.42.34 $DEST_IP 6666 $DEST_PORT &
-sudo python3 main.py -n $message 192.168.42.34 $DEST_IP 5321 $DEST_PORT &
-sudo python3 main.py -n $message 192.168.42.34 $DEST_IP 5322 $DEST_PORT &
-sudo python3 main.py -n $message 192.168.42.34 $DEST_IP 5323 $DEST_PORT &
-# sudo python3 main.py -n $message 192.168.42.34 $DEST_IP 5322 $DEST_PORT &
-# sudo python3 main.py -n $message 192.168.42.34 $DEST_IP 5323 $DEST_PORT &
-# sudo python3 main.py -n $message 192.168.42.34 $DEST_IP 5320 $DEST_PORT &
-# sudo python3 main.py -n $message 192.168.42.34 $DEST_IP 5321 $DEST_PORT &
+sudo python3 $SOURCE_FOLDER/main.py -n $message 192.168.42.34 $DEST_IP 6666 $DEST_PORT &
+sudo python3 $SOURCE_FOLDER/main.py -n $message 192.168.42.34 $DEST_IP 5321 $DEST_PORT &
+# sudo python3 $SOURCE_FOLDER/main.py -n $message 192.168.42.34 $DEST_IP 5322 $DEST_PORT &
+# sudo python3 $SOURCE_FOLDER/main.py -n $message 192.168.42.34 $DEST_IP 5323 $DEST_PORT &
+# sudo python3 $SOURCE_FOLDER/main.py -n $message 192.168.42.34 $DEST_IP 5322 $DEST_PORT &
+# sudo python3 $SOURCE_FOLDER/main.py -n $message 192.168.42.34 $DEST_IP 5323 $DEST_PORT &
+# sudo python3 $SOURCE_FOLDER/main.py -n $message 192.168.42.34 $DEST_IP 5320 $DEST_PORT &
+# sudo python3 $SOURCE_FOLDER/main.py -n $message 192.168.42.34 $DEST_IP 5321 $DEST_PORT &
