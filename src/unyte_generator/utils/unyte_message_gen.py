@@ -1,5 +1,6 @@
 import json
 import random
+import pathlib
 
 
 class mock_message_generator:
@@ -22,7 +23,8 @@ class mock_message_generator:
 
     def generate_message(self, message_type='ints'):
         if message_type == "json":
-            return self.read_json("./message.json")
+            # TODO: maybe from args ?
+            return self.read_json(str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/message.json')
         elif message_type == "ints":
             return self.generate_ordered_ints()
         elif message_type == "rand":
