@@ -33,7 +33,7 @@ class udp_notif_generator:
         self.mock_generator = mock_message_generator()
 
         self.pid = os.getpid()
-        self.wrpcap_enabled = True  # TODO: save from args
+        self.wrpcap_enabled = False  # TODO: save from args
         self.set_logger_level(self.display)
         logging.info("Unyte scapy generator launched")
 
@@ -101,6 +101,7 @@ class udp_notif_generator:
         maximum_length = self.mtu - UDPN_header_length
 
         message_increment = 0
+        messages_lost = 0
 
         while message_increment < self.message_amount:
 
@@ -169,6 +170,7 @@ class udp_notif_generator:
                     npackets += 1
                     self.save_pcap('filtered.pcap', packet)
                 else:
+                    messages_lost += 1
                     logging.info("simulating packet " + str(packet[UDPN].message_id) + " lost")
 
             if (self.random_order == 1):
@@ -182,9 +184,11 @@ class udp_notif_generator:
                     send(segment_list[i], verbose=0)
                     npackets += 1
                 else:
+                    messages_lost += 1
                     logging.info("simulating segment " + str(segment_list[i][OPT].segment_id) +
                                  " from message " + str(segment_list[i][UDPN].message_id) + " lost")
         end = time.time()
         duration = end - start
         logging.info('Sent ' + str(npackets) + ' in ' + str(duration))
+        logging.info('Simulated %d lost messages from %d total messages', messages_lost, (npackets + messages_lost))
         return
