@@ -48,7 +48,7 @@ Examples :
 2 messages of 5 shuffled segments of size 1500 with a json payload, from observation domains 10 and 11, with 0.1 loss probability and 1 second sleep time between messages, displaying control messages and segment headers
 
 ## Docker container
-See [Docker docs](docker/README.md)
+See [Docker docs](docker)
 
 ## Launch multiple simulations
 - `./launch_multiple.sh <number_messages>` : launches multiple instances of the generator simuling multiple source ips and ports

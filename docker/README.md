@@ -3,19 +3,16 @@
 Docker container for the UDP-notif scapy project.
 
 ## Build and run 
-- Build: `./build-docker.sh`
-- Run container : `./run-container.sh`
-- Active dockers: `docker ps`
-- Stopping containers : `docker stop <container_id>`
-- Logs from container : `docker logs <container_id> -f`
+You can use both `docker` and `podman` engines.
 
-The `run-container.sh` script launch multiple containers simulating UDP-notif messages. You can adapt the script depending your needs.
+| Commands/scripts                     | Description             |
+| ------------------------------------ |-------------------------|
+| `./build-docker.sh <docker_engine>`  | Build container for current scapy code. `<docker_engine>` can be `docker` or `podman`. Default: `docker`. |
+| `./run-docker.sh <docker_engine>`    | Running container with multiple instances, see the script and adapt as needed. `<docker_engine>` can be `docker` or `podman`. Default: `docker`. |
+| `docker ps`                          | See active containers |
+| `./stop-docker.sh <docker_engine>`   | Stopping all active scapy containers. `<docker_engine>` can be `docker` or `podman`. Default: `docker`. |
+| `docker logs <container_id> -f`      | See a scapy container logs. By default, the logs are binded by a volume in the folder `logs` |
+
 
 To simply launch one instance of the scapy in a container :
 - `docker run unyte/scapy:latest python3 src/main.py <args>` : being `<args>` the arguments showed in the main [README](../README.md#usage) 
-
-## Notes :
-
-`docker run -itd -p 9340:9340/udp scapy_worker python main.py 192.168.1.10 192.168.1.10 9340 9341 -n 1000 -m 1024 -l 0.02 -r 1`
-
-`CMD [ "python", "./main.py", "192.168.1.10", "192.168.1.10", "9340", "9341", "-n 1000", "-m 1024", "-l 0.02", "-r 1" ]`
