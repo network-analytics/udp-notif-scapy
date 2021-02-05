@@ -10,3 +10,4 @@ if __name__ == "__main__":
     generator = udp_notif_generator(args)
 
     generator.send_udp_notif()
+    
