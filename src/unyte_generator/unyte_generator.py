@@ -20,30 +20,32 @@ class udp_notif_generator:
         self.destination_port = int(args.destination_port[0])
         self.initial_domain = args.initial_domain
         self.additional_domains = args.additional_domains
-        self.message_type = args.message_type
+        self.message_size = args.message_size
         self.message_amount = args.message_amount
         if self.message_amount == 0:
             self.message_amount = float('inf')
         self.mtu = args.mtu
-        self.sleep_time = args.sleep_time
-        self.loss_probability = args.loss_probability
+        self.waiting_time = args.waiting_time
+        self.probability_of_loss = args.probability_of_loss
         self.random_order = args.random_order
-        self.display = args.display
+        self.logging_level = args.logging_level
+        self.capture = args.capture
 
         self.mock_generator = mock_message_generator()
 
         self.pid = os.getpid()
-        self.wrpcap_enabled = False  # TODO: save from args
-        self.set_logger_level(self.display)
+        self.set_logger_level(self.logging_level)
         logging.info("Unyte scapy generator launched")
 
-    def set_logger_level(self, display):
-        if display == 'everything':
+    def set_logger_level(self, logging_level):
+        if logging_level == 'debug':
             logging.basicConfig(format='[%(levelname)s] (' + str(self.pid) + '): %(message)s', level=logging.DEBUG)
-        elif display == 'headers':
+        elif logging_level == 'info':
             logging.basicConfig(format='[%(levelname)s] (' + str(self.pid) + '): %(message)s', level=logging.INFO)
-        else:
-            logging.disable()
+        elif logging_level == 'warning':
+            logging.basicConfig(format='[%(levelname)s] (' + str(self.pid) + '): %(message)s', level=logging.WARNING)
+        elif logging_level == 'none':
+            logging.disable(level=logging.DEBUG)
 
     def log_used_args(self):
         attrs = vars(self)
@@ -78,11 +80,11 @@ class udp_notif_generator:
         logging.info("------------ end segment ------------")
 
     def save_pcap(self, filename, packet):
-        if self.wrpcap_enabled:
+        if self.capture == 1:
             wrpcap(filename, packet, append=True)
 
     def generate_mock_message(self):
-        return self.mock_generator.generate_message(self.message_type)
+        return self.mock_generator.generate_message(self.message_size)
 
     def send_udp_notif(self):
 
@@ -104,16 +106,12 @@ class udp_notif_generator:
         messages_lost = 0
 
         while message_increment < self.message_amount:
+            
+            time.sleep(self.waiting_time)
 
             message_increment += 1
 
             segment_list = []
-
-            if message_increment != 0:
-                # TODO: may be a better way to do that ?
-                if self.message_type == "rand":
-                    message = self.generate_mock_message()
-                time.sleep(self.sleep_time)
 
             domain = observation_domains[message_increment % len(observation_domains)]
 
@@ -160,12 +158,12 @@ class udp_notif_generator:
 
                 self.log_packet(packet)
 
-                if self.loss_probability == 0:
+                if self.probability_of_loss == 0:
                     send(packet, verbose=0)
                     npackets += 1
 
                     self.save_pcap('filtered.pcap', packet)
-                elif random.randint(1, int(1 / self.loss_probability)) != 1:
+                elif random.randint(1, int(1 / self.probability_of_loss)) != 1:
                     send(packet, verbose=0)
                     npackets += 1
                     self.save_pcap('filtered.pcap', packet)
@@ -177,10 +175,10 @@ class udp_notif_generator:
                 random.shuffle(segment_list)
 
             for i in range(len(segment_list)):
-                if (self.loss_probability == 0):
+                if (self.probability_of_loss == 0):
                     send(segment_list[i], verbose=0)
                     npackets += 1
-                elif random.randint(1, int(1000 * (1 / self.loss_probability))) >= 1000:
+                elif random.randint(1, int(1000 * (1 / self.probability_of_loss))) >= 1000:
                     send(segment_list[i], verbose=0)
                     npackets += 1
                 else:

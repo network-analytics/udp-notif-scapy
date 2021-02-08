@@ -19,33 +19,35 @@ x (INT) destination port, 1000 < x < 10000
 
 Optional arguments :
 
-`-i x` : (INT) initial observation domain id, x >= 0, default 0
+`--initial-domain x` or `-i x` : (INT) initial observation domain id, x >= 0, default 0
 
-`-a x` : (INT) amount of additional observation domains, x >= 0, default 0
+`--additional-domains x` or `-a x` : (INT) amount of additional observation domains, x >= 0, default 0
 
-`-t s` : (STR) type of payload data, s = ints or s = json or s = rand, default ints
+`--message-size s` or `-s s` : (STR) size of payload data, s = small or s = big, default small
 
-`-n x` : (INT) amount of messages to send, x >= 1, default 1
+`--message-amount x` or `-n x` : (INT) amount of messages to send, x >= 1, default 1
 
-`-m x` : (INT) maximum transmission unit, 16 < x < 65535, default 1500
+`--mtu x` or `-m x` : (INT) maximum transmission unit, 16 < x < 65535, default 1500
 
-`-s f` : (FLOAT) sleep time between two messages, x > 0, default 0
+`--waiting-time f` or `-w f` : (FLOAT) waiting time (in seconds) between two messages, x > 0, default 0
 
-`-l f` : (FLOAT) segment loss probability, 0 <= x < 1, default 0
+`--probability-of-loss f` or `-p f` : (FLOAT) segment loss probability, 0 <= x < 1, default 0
 
-`-r x` : (INT) forward segments in random order, x = 0 or x = 1, default 0
+`--random-order x` or `-r x` : (INT) forward segments in random order, x = 0 or x = 1, default 0
 
-`-d s` : (STR) information display, s = control or s = headers or s = everything, default control
+`--logging-level s` or `-l s` : (STR) logging level, s = none or s = warning or s = info or s = debug, default warning
+
+`--capture x` or `-c x` : (INT) Set to 1 if you need a wireshark capture of the forwarded packets, x = 1 or x = 0, default 0
 
 Examples :
 
-`sudo python3 src/main.py 192.168.0.2 192.168.0.2 3456 3457`
+`sudo python3 src/main.py 192.0.2.66 192.0.2.66 3456 3457`
 
-1 segment of size 12 + 1024 with a payload of integers, from observation domain 0, with no loss probability, displaying control messages only
+1 segment of size 12 + 716 with a small json payload, from observation domain 0, with no loss probability, displaying control messages only
 
-`sudo python3 src/main.py 192.168.0.2 192.168.0.2 3456 3457 -n 2 -r 1 -t json -i 10 -a 1 -l 0.1 -s 1 -d headers`
+`sudo python3 src/main.py 192.0.2.66 192.0.2.66 3456 3457 -n 2 -r 1 -s big -i 10 -a 1 -p 0.1 -w 0.1 -l info`
 
-2 messages of 5 shuffled segments of size 1500 with a json payload, from observation domains 10 and 11, with 0.1 loss probability and 1 second sleep time between messages, displaying control messages and segment headers
+2 messages of 5 shuffled segments of size 1500 with a json payload, from observation domains 10 and 11, with 0.1 loss probability and 0.1 second wait time between messages, displaying control messages and segment headers
 
 ## Docker container
 See [Docker docs](docker)
