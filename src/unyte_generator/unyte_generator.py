@@ -50,34 +50,34 @@ class udp_notif_generator:
     def log_used_args(self):
         attrs = vars(self)
         logging.info('Used args: ' + ', '.join("%s: %s" % item for item in attrs.items()))
-
-    def log_packet(self, packet):
-        logging.info("-------------- packet --------------")
+        
+    def log_header_udpn(self, packet):
         logging.info("packet version = " + str(packet[UDPN].version))
         logging.info("packet space = " + str(packet[UDPN].space))
-        logging.info("packet encoding_type = " + str(packet[UDPN].encoding_type))
-        logging.info("packet header_length = " + str(packet[UDPN].header_length))
-        logging.info("packet message_length = " + str(packet[UDPN].message_length))
-        logging.info("packet observation_domain_id = " + str(packet[UDPN].observation_domain_id))
-        logging.info("packet message_id = " + str(packet[UDPN].message_id))
-        logging.debug("packet message = " + str(packet[PAYLOAD].message.decode()))
-        logging.info("------------ end packet ------------")
+        logging.info("packet encoding type = " + str(packet[UDPN].encoding_type))
+        logging.info("packet header length = " + str(packet[UDPN].header_length))
+        logging.info("packet message length = " + str(packet[UDPN].message_length))
+        logging.info("packet observation domain id = " + str(packet[UDPN].observation_domain_id))
+        logging.info("packet message id = " + str(packet[UDPN].message_id))
+    
+    def log_header_opt(self, packet):
+        logging.info("packet type = " + str(packet[OPT].type))
+        logging.info("packet option length = " + str(packet[OPT].option_length))
+        logging.info("packet segment id = " + str(packet[OPT].segment_id))
+        logging.info("packet last = " + str(packet[OPT].last))
 
-    def log_segment(self, segment_increment, segment):
-        logging.info("-------------- segment --------------")
-        logging.info("segment " + str(segment_increment) + " version = " + str(segment[UDPN].version))
-        logging.info("segment " + str(segment_increment) + " space = " + str(segment[UDPN].space))
-        logging.info("segment " + str(segment_increment) + " encoding_type = " + str(segment[UDPN].encoding_type))
-        logging.info("segment " + str(segment_increment) + " header_length = " + str(segment[UDPN].header_length))
-        logging.info("segment " + str(segment_increment) + " message_length = " + str(segment[UDPN].message_length))
-        logging.info("segment " + str(segment_increment) + " observation_domain_id = " + str(segment[UDPN].observation_domain_id))
-        logging.info("segment " + str(segment_increment) + " message_id " + str(segment[UDPN].message_id))
-        logging.info("segment " + str(segment_increment) + " type = " + str(segment[OPT].type))
-        logging.info("segment " + str(segment_increment) + " option_length = " + str(segment[OPT].option_length))
-        logging.info("segment " + str(segment_increment) + " segment_id = " + str(segment[OPT].segment_id))
-        logging.info("segment " + str(segment_increment) + " last = " + str(segment[OPT].last))
-        logging.debug("segment " + str(segment_increment) + " message = " + str(segment[PAYLOAD].message.decode()))
-        logging.info("------------ end segment ------------")
+    def log_packet(self, packet):
+        logging.info("---------------- packet ----------------")
+        self.log_header_udpn(packet)
+        logging.debug("packet message = " + str(packet[PAYLOAD].message.decode()))
+        logging.info("-------------- end packet --------------")
+
+    def log_segment(self, packet, packet_increment):
+        logging.info("---------- packet (segment " + str(packet_increment) + ") ----------")
+        self.log_header_udpn(packet)
+        self.log_header_opt(packet)
+        logging.debug("packet message = " + str(packet[PAYLOAD].message.decode()))
+        logging.info("-------- end packet (segment " + str(packet_increment) + ") --------")
 
     def save_pcap(self, filename, packet):
         if self.capture == 1:
@@ -110,7 +110,10 @@ class udp_notif_generator:
                     packet[PAYLOAD].message = current_message[maximum_length * packet_increment:]
                     packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
                     packet[OPT].last = 1
-            self.log_packet(packet)
+            if packet_amount == 1:
+                self.log_packet(packet)
+            else:
+                self.log_segment(packet, packet_increment)
             self.save_pcap('filtered.pcap', packet)
             packet_list.append(packet)
         return packet_list
