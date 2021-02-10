@@ -50,7 +50,7 @@ class udp_notif_generator:
     def log_used_args(self):
         attrs = vars(self)
         logging.info('Used args: ' + ', '.join("%s: %s" % item for item in attrs.items()))
-        
+
     def log_header_udpn(self, packet):
         logging.info("packet version = " + str(packet[UDPN].version))
         logging.info("packet space = " + str(packet[UDPN].space))
@@ -59,7 +59,7 @@ class udp_notif_generator:
         logging.info("packet message length = " + str(packet[UDPN].message_length))
         logging.info("packet observation domain id = " + str(packet[UDPN].observation_domain_id))
         logging.info("packet message id = " + str(packet[UDPN].message_id))
-    
+
     def log_header_opt(self, packet):
         logging.info("packet type = " + str(packet[OPT].type))
         logging.info("packet option length = " + str(packet[OPT].option_length))
@@ -85,7 +85,7 @@ class udp_notif_generator:
 
     def generate_mock_message(self):
         return self.mock_generator.generate_message(self.message_size)
-        
+
     def generate_packet_list(self, packet_amount, maximum_length, current_message, current_domain_id, current_message_id):
         packet_list = []
         for packet_increment in range(packet_amount):
@@ -117,7 +117,7 @@ class udp_notif_generator:
             self.save_pcap('filtered.pcap', packet)
             packet_list.append(packet)
         return packet_list
-    
+
     def forward_current_message(self, packet_list):
         current_message_lost_packets = 0
         if (self.random_order == 1):
@@ -130,11 +130,10 @@ class udp_notif_generator:
             else:
                 current_message_lost_packets += 1
                 if len(packet_list) == 1:
-                    logging.info(   "simulating packet number " + "0" +
-                                    " from message " + str(packet_list[i][UDPN].message_id) + " lost")
+                    logging.info("simulating packet number 0 from message_id " + str(packet_list[i][UDPN].message_id) + " lost")
                 else:
-                    logging.info(   "simulating packet number " + str(packet_list[i][OPT].segment_id) +
-                                    " from message " + str(packet_list[i][UDPN].message_id) + " lost")
+                    logging.info("simulating packet number " + str(packet_list[i][OPT].segment_id) +
+                                 " from message_id " + str(packet_list[i][UDPN].message_id) + " lost")
         return current_message_lost_packets
 
     def send_udp_notif(self):
@@ -151,7 +150,7 @@ class udp_notif_generator:
 
         lost_packets = 0
         forwarded_packets = 0
-        
+
         for message_increment in range(self.message_amount):
             current_domain_id = observation_domains[message_increment % len(observation_domains)]
             current_message_id = message_ids[current_domain_id]
@@ -176,4 +175,4 @@ class udp_notif_generator:
         generation_total_duration = timer_end - timer_start
         logging.info('Sent ' + str(forwarded_packets) + ' in ' + str(generation_total_duration))
         logging.info('Simulated %d lost packets from %d total packets', lost_packets, (forwarded_packets + lost_packets))
-        return
+        return forwarded_packets
