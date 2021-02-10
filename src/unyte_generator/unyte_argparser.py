@@ -24,23 +24,25 @@ class unyte_argparser():
         self.parser.add_argument('--additional-domains', '-a', type=int,
                                  default=0, help='Amount of observation domains in addition to the first')
         # MESSAGE TYPE AND AMOUNT
-        self.parser.add_argument('--message-type', '-t',
-                                 default="ints", choices=["ints", "json", "rand"], help='The type of data sent')
+        self.parser.add_argument('--message-size', '-s',
+                                 default="small", choices=["small", "big"], help='Size of transmitted json file')
         self.parser.add_argument('--message-amount', '-n', type=int,
                                  default=1, help='Amount of notification messages to send')
         # FORWARDING RULES
         self.parser.add_argument('--mtu', '-m', type=int,
                                  default=1500, help='Maximum Transmission Unit')
-        self.parser.add_argument('--sleep-time', '-s', type=float,
+        self.parser.add_argument('--waiting-time', '-w', type=float,
                                  default=0, help='Sleep time between sending two notification messages')
         # RANDOMNESS
-        self.parser.add_argument('--loss-probability', '-l', type=float,
+        self.parser.add_argument('--probability-of-loss', '-p', type=float,
                                  default=0, help='Probability of a packet loss during transmission')
         self.parser.add_argument('--random-order', '-r', type=int,
-                                 default=0, help='Whether the segments must be sent in a random order or not')
-        # DISPLAY
-        self.parser.add_argument('--display', '-d',
-                                 default="control", choices=["control", "headers", "everything"], help='Information display, from only control messages to payloads')
+                                 default=0, help='Set to 1 if segments must be send in a random order')
+        # UTILITY
+        self.parser.add_argument('--logging-level', '-l',
+                                 default="warning", choices=["none", "warning", "info", "debug"], help='Logging mode, warning by default, set to none for no logs, info for headers, debug for payloads')
+        self.parser.add_argument('--capture', '-c', type=int,
+                                 default=0, help='Set to 1 if you need a wireshark capture of the forwarded packets')
 
     def parse_args(self):
         return self.parser.parse_args()

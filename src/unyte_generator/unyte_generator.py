@@ -20,74 +20,124 @@ class udp_notif_generator:
         self.destination_port = int(args.destination_port[0])
         self.initial_domain = args.initial_domain
         self.additional_domains = args.additional_domains
-        self.message_type = args.message_type
+        self.message_size = args.message_size
         self.message_amount = args.message_amount
         if self.message_amount == 0:
             self.message_amount = float('inf')
         self.mtu = args.mtu
-        self.sleep_time = args.sleep_time
-        self.loss_probability = args.loss_probability
+        self.waiting_time = args.waiting_time
+        self.probability_of_loss = args.probability_of_loss
         self.random_order = args.random_order
-        self.display = args.display
+        self.logging_level = args.logging_level
+        self.capture = args.capture
 
         self.mock_generator = mock_message_generator()
 
         self.pid = os.getpid()
-        self.wrpcap_enabled = False  # TODO: save from args
-        self.set_logger_level(self.display)
+        self.set_logger_level(self.logging_level)
         logging.info("Unyte scapy generator launched")
 
-    def set_logger_level(self, display):
-        if display == 'everything':
+    def set_logger_level(self, logging_level):
+        if logging_level == 'debug':
             logging.basicConfig(format='[%(levelname)s] (' + str(self.pid) + '): %(message)s', level=logging.DEBUG)
-        elif display == 'headers':
+        elif logging_level == 'info':
             logging.basicConfig(format='[%(levelname)s] (' + str(self.pid) + '): %(message)s', level=logging.INFO)
-        else:
-            logging.disable()
+        elif logging_level == 'warning':
+            logging.basicConfig(format='[%(levelname)s] (' + str(self.pid) + '): %(message)s', level=logging.WARNING)
+        elif logging_level == 'none':
+            logging.disable(level=logging.DEBUG)
 
     def log_used_args(self):
         attrs = vars(self)
         logging.info('Used args: ' + ', '.join("%s: %s" % item for item in attrs.items()))
 
-    def log_packet(self, packet):
-        logging.info("-------------- packet --------------")
+    def log_header_udpn(self, packet):
         logging.info("packet version = " + str(packet[UDPN].version))
         logging.info("packet space = " + str(packet[UDPN].space))
-        logging.info("packet encoding_type = " + str(packet[UDPN].encoding_type))
-        logging.info("packet header_length = " + str(packet[UDPN].header_length))
-        logging.info("packet message_length = " + str(packet[UDPN].message_length))
-        logging.info("packet observation_domain_id = " + str(packet[UDPN].observation_domain_id))
-        logging.info("packet message_id = " + str(packet[UDPN].message_id))
-        logging.debug("packet message = " + str(packet[PAYLOAD].message.decode()))
-        logging.info("------------ end packet ------------")
+        logging.info("packet encoding type = " + str(packet[UDPN].encoding_type))
+        logging.info("packet header length = " + str(packet[UDPN].header_length))
+        logging.info("packet message length = " + str(packet[UDPN].message_length))
+        logging.info("packet observation domain id = " + str(packet[UDPN].observation_domain_id))
+        logging.info("packet message id = " + str(packet[UDPN].message_id))
 
-    def log_segment(self, segment_increment, segment):
-        logging.info("-------------- segment --------------")
-        logging.info("segment " + str(segment_increment) + " version = " + str(segment[UDPN].version))
-        logging.info("segment " + str(segment_increment) + " space = " + str(segment[UDPN].space))
-        logging.info("segment " + str(segment_increment) + " encoding_type = " + str(segment[UDPN].encoding_type))
-        logging.info("segment " + str(segment_increment) + " header_length = " + str(segment[UDPN].header_length))
-        logging.info("segment " + str(segment_increment) + " message_length = " + str(segment[UDPN].message_length))
-        logging.info("segment " + str(segment_increment) + " observation_domain_id = " + str(segment[UDPN].observation_domain_id))
-        logging.info("segment " + str(segment_increment) + " message_id " + str(segment[UDPN].message_id))
-        logging.info("segment " + str(segment_increment) + " type = " + str(segment[OPT].type))
-        logging.info("segment " + str(segment_increment) + " option_length = " + str(segment[OPT].option_length))
-        logging.info("segment " + str(segment_increment) + " segment_id = " + str(segment[OPT].segment_id))
-        logging.info("segment " + str(segment_increment) + " last = " + str(segment[OPT].last))
-        logging.debug("segment " + str(segment_increment) + " message = " + str(segment[PAYLOAD].message.decode()))
-        logging.info("------------ end segment ------------")
+    def log_header_opt(self, packet):
+        logging.info("packet type = " + str(packet[OPT].type))
+        logging.info("packet option length = " + str(packet[OPT].option_length))
+        logging.info("packet segment id = " + str(packet[OPT].segment_id))
+        logging.info("packet last = " + str(packet[OPT].last))
+
+    def log_packet(self, packet):
+        logging.info("---------------- packet ----------------")
+        self.log_header_udpn(packet)
+        logging.debug("packet message = " + str(packet[PAYLOAD].message.decode()))
+        logging.info("-------------- end packet --------------")
+
+    def log_segment(self, packet, packet_increment):
+        logging.info("---------- packet (segment " + str(packet_increment) + ") ----------")
+        self.log_header_udpn(packet)
+        self.log_header_opt(packet)
+        logging.debug("packet message = " + str(packet[PAYLOAD].message.decode()))
+        logging.info("-------- end packet (segment " + str(packet_increment) + ") --------")
 
     def save_pcap(self, filename, packet):
-        if self.wrpcap_enabled:
+        if self.capture == 1:
             wrpcap(filename, packet, append=True)
 
     def generate_mock_message(self):
-        return self.mock_generator.generate_message(self.message_type)
+        return self.mock_generator.generate_message(self.message_size)
+
+    def generate_packet_list(self, packet_amount, maximum_length, current_message, current_domain_id, current_message_id):
+        packet_list = []
+        for packet_increment in range(packet_amount):
+            if packet_amount == 1:
+                packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/PAYLOAD()
+            else:
+                packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/OPT()/PAYLOAD()
+            packet.sport = self.source_port
+            packet.dport = self.destination_port
+            packet[UDPN].observation_domain_id = current_domain_id
+            packet[UDPN].message_id = current_message_id
+            if packet_amount == 1:
+                packet[PAYLOAD].message = current_message
+                packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
+            else:
+                packet[UDPN].header_length = UDPN_header_length + OPT_header_length
+                packet[OPT].segment_id = packet_increment
+                if (len(current_message[maximum_length * packet_increment:]) > maximum_length):
+                    packet[PAYLOAD].message = current_message[maximum_length * packet_increment:maximum_length * (packet_increment + 1)]
+                    packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
+                else:
+                    packet[PAYLOAD].message = current_message[maximum_length * packet_increment:]
+                    packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
+                    packet[OPT].last = 1
+            if packet_amount == 1:
+                self.log_packet(packet)
+            else:
+                self.log_segment(packet, packet_increment)
+            self.save_pcap('filtered.pcap', packet)
+            packet_list.append(packet)
+        return packet_list
+
+    def forward_current_message(self, packet_list):
+        current_message_lost_packets = 0
+        if (self.random_order == 1):
+            random.shuffle(packet_list)
+        for i in range(len(packet_list)):
+            if (self.probability_of_loss == 0):
+                send(packet_list[i], verbose=0)
+            elif random.randint(1, int(1000 * (1 / self.probability_of_loss))) >= 1000:
+                send(packet_list[i], verbose=0)
+            else:
+                current_message_lost_packets += 1
+                if len(packet_list) == 1:
+                    logging.info("simulating packet number 0 from message_id " + str(packet_list[i][UDPN].message_id) + " lost")
+                else:
+                    logging.info("simulating packet number " + str(packet_list[i][OPT].segment_id) +
+                                 " from message_id " + str(packet_list[i][UDPN].message_id) + " lost")
+        return current_message_lost_packets
 
     def send_udp_notif(self):
-
-        start = time.time()
-        npackets = 0
+        timer_start = time.time()
         observation_domains = []
         message_ids = {}
         for i in range(1 + self.additional_domains):
@@ -95,100 +145,34 @@ class udp_notif_generator:
             message_ids[observation_domains[i]] = 0
 
         self.log_used_args()
-
-        message = self.generate_mock_message()
-
+        current_message = self.generate_mock_message()
         maximum_length = self.mtu - UDPN_header_length
 
-        message_increment = 0
-        messages_lost = 0
+        lost_packets = 0
+        forwarded_packets = 0
 
-        while message_increment < self.message_amount:
+        for message_increment in range(self.message_amount):
+            current_domain_id = observation_domains[message_increment % len(observation_domains)]
+            current_message_id = message_ids[current_domain_id]
+            message_ids[current_domain_id] += 1
 
-            message_increment += 1
-
-            segment_list = []
-
-            if message_increment != 0:
-                # TODO: may be a better way to do that ?
-                if self.message_type == "rand":
-                    message = self.generate_mock_message()
-                time.sleep(self.sleep_time)
-
-            domain = observation_domains[message_increment % len(observation_domains)]
-
-            # SEGMENTATION
-            if len(message) > maximum_length:
-
+            if len(current_message) > maximum_length:
                 maximum_length = self.mtu - UDPN_header_length - OPT_header_length
-                segment_amount = len(message) // maximum_length
-                if len(message) % maximum_length != 0:
-                    segment_amount += 1
-
-                for segment_increment in range(segment_amount):
-                    segment = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/OPT()/PAYLOAD()
-                    segment.sport = self.source_port
-                    segment.dport = self.destination_port
-                    segment[UDPN].observation_domain_id = domain
-                    segment[UDPN].message_id = message_ids[domain]
-                    segment[UDPN].header_length = UDPN_header_length + OPT_header_length
-                    segment[OPT].segment_id = segment_increment
-                    if (len(message[maximum_length * segment_increment:]) > maximum_length):
-                        segment[PAYLOAD].message = message[maximum_length * segment_increment:maximum_length * (segment_increment + 1)]
-                        segment[UDPN].message_length = segment[UDPN].header_length + len(segment[PAYLOAD].message)
-                    else:
-                        segment[PAYLOAD].message = message[maximum_length * segment_increment:]
-                        segment[UDPN].message_length = segment[UDPN].header_length + len(segment[PAYLOAD].message)
-                        segment[OPT].last = 1
-                        message_ids[domain] += 1
-
-                    self.log_segment(segment_increment, segment)
-
-                    segment_list.append(segment)
-                    self.save_pcap('filtered.pcap', segment)
-
-            # NO SEGMENTATION
+                packet_amount = len(current_message) // maximum_length
+                if len(current_message) % maximum_length != 0:
+                    packet_amount += 1
+                packet_list = self.generate_packet_list(packet_amount, maximum_length, current_message, current_domain_id, current_message_id)
             else:
-                packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/PAYLOAD()
-                packet.sport = self.source_port
-                packet.dport = self.destination_port
-                packet[PAYLOAD].message = message
-                packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
-                packet[UDPN].observation_domain_id = domain
-                packet[UDPN].message_id = message_ids[domain]
-                message_ids[domain] += 1
+                packet_amount = 1
+                packet_list = self.generate_packet_list(packet_amount, maximum_length, current_message, current_domain_id, current_message_id)
 
-                self.log_packet(packet)
+            current_message_lost_packets = self.forward_current_message(packet_list)
+            forwarded_packets += len(packet_list) - current_message_lost_packets
+            lost_packets += current_message_lost_packets
+            time.sleep(self.waiting_time)
 
-                if self.loss_probability == 0:
-                    send(packet, verbose=0)
-                    npackets += 1
-
-                    self.save_pcap('filtered.pcap', packet)
-                elif random.randint(1, int(1 / self.loss_probability)) != 1:
-                    send(packet, verbose=0)
-                    npackets += 1
-                    self.save_pcap('filtered.pcap', packet)
-                else:
-                    messages_lost += 1
-                    logging.info("simulating packet " + str(packet[UDPN].message_id) + " lost")
-
-            if (self.random_order == 1):
-                random.shuffle(segment_list)
-
-            for i in range(len(segment_list)):
-                if (self.loss_probability == 0):
-                    send(segment_list[i], verbose=0)
-                    npackets += 1
-                elif random.randint(1, int(1000 * (1 / self.loss_probability))) >= 1000:
-                    send(segment_list[i], verbose=0)
-                    npackets += 1
-                else:
-                    messages_lost += 1
-                    logging.info("simulating segment " + str(segment_list[i][OPT].segment_id) +
-                                 " from message " + str(segment_list[i][UDPN].message_id) + " lost")
-        end = time.time()
-        duration = end - start
-        logging.info('Sent ' + str(npackets) + ' in ' + str(duration))
-        logging.info('Simulated %d lost messages from %d total messages', messages_lost, (npackets + messages_lost))
-        return
+        timer_end = time.time()
+        generation_total_duration = timer_end - timer_start
+        logging.info('Sent ' + str(forwarded_packets) + ' in ' + str(generation_total_duration))
+        logging.info('Simulated %d lost packets from %d total packets', lost_packets, (forwarded_packets + lost_packets))
+        return forwarded_packets
