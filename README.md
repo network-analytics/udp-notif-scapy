@@ -43,11 +43,15 @@ Examples :
 
 `sudo python3 src/main.py 192.0.2.66 192.0.2.66 3456 3457`
 
-1 segment of size 12 + 716 with a small json payload, from observation domain 0, with no loss probability, displaying control messages only
+1 segment of size 12 + 716 (header + payload) with a json payload, from observation domain 0, with no loss probability, logging control messages only
+
+`sudo python3 src/main.py 192.0.2.66 192.0.2.66 3456 3457 -n 0`
+
+Continuous stream of messages like the previous one
 
 `sudo python3 src/main.py 192.0.2.66 192.0.2.66 3456 3457 -n 2 -r 1 -s big -i 10 -a 1 -p 0.1 -w 0.1 -l info`
 
-2 messages of 5 shuffled segments of size 1500 with a json payload, from observation domains 10 and 11, with 0.1 loss probability and 0.1 second wait time between messages, displaying control messages and segment headers
+2 messages of 5 shuffled segments of size 1500 with a json payload, from observation domains 10 and 11, with 0.1 loss probability and 0.1 second wait time between messages, logging control messages and segment headers
 
 ## Docker container
 See [Docker docs](docker)
