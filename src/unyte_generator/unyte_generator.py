@@ -150,8 +150,9 @@ class udp_notif_generator:
 
         lost_packets = 0
         forwarded_packets = 0
+        message_increment = 0
 
-        for message_increment in range(self.message_amount):
+        while message_increment < self.message_amount:
             current_domain_id = observation_domains[message_increment % len(observation_domains)]
             current_message_id = message_ids[current_domain_id]
             message_ids[current_domain_id] += 1
@@ -170,6 +171,7 @@ class udp_notif_generator:
             forwarded_packets += len(packet_list) - current_message_lost_packets
             lost_packets += current_message_lost_packets
             time.sleep(self.waiting_time)
+            message_increment += 1
 
         timer_end = time.time()
         generation_total_duration = timer_end - timer_start
