@@ -1,27 +1,64 @@
 #!/bin/bash
 
 # Run as root
-if [ "$EUID" -ne 0 ]
+if [ "$EUID" -ne 0 ];
 then
   echo "Please run as root."
   exit
 fi
 
 # Arguments
-MESSAGES=100
 DEST_IP="192.168.0.17"
 DEST_PORT="8081"
-INSTANCES=200
+MESSAGES=100
+INSTANCES=20
+JSON=big   # big or small json file
+
+NB_ARGS=$#
+if [ $NB_ARGS = 5 ] || [ $NB_ARGS = 6 ];
+then
+  INSTANCES=$1
+  MESSAGES=$2
+  JSON=$3
+  DEST_IP=$4
+  DEST_PORT=$5
+else
+  echo -e "\e[1m\e[33mUsing default parameters. Use all 5 or 6 parameters if needed.\e[39m\e[0m"
+fi
+
+if [ $NB_ARGS = 6 ] && [ "$6" = "-y" ];
+then
+  PASS_CONFIRM=true
+else 
+  PASS_CONFIRM=false
+fi
 
 # if json --> 1 message = 5 segments
 PACKETS_PER_MESSAGE=5
-SOURCE_FOLDER=../src
+
+CURRENT_FOLDER=$(dirname "$0")
+SOURCE_FOLDER=$CURRENT_FOLDER/../src
+
+TOTAL_MSG_TO_SEND=0
+
+if [ $JSON = "big" ]
+then
+  TOTAL_MSG_TO_SEND=$((MESSAGES * PACKETS_PER_MESSAGE * INSTANCES))
+else
+  TOTAL_MSG_TO_SEND=$((MESSAGES * INSTANCES))
+fi
 
 echo -e "Sending messages to \e[1m\\e[36m$DEST_IP:$DEST_PORT\e[0m";
+echo -e "Using \e[1m\\e[36m$JSON\e[0m json file";
 echo -e "Launching \e[1m\\e[36m$INSTANCES\e[0m instances of scapy";
 echo -e "Summary: \e[1m\e[36m$MESSAGES\e[0m messages, \e[1m\e[36m$(($MESSAGES * $PACKETS_PER_MESSAGE))\e[0m packets will be sent for every scapy. "
-echo -e "Total packets to send: \e[1m\e[36m$(($MESSAGES * $PACKETS_PER_MESSAGE * $INSTANCES))\e[0m packets will be sent"
-read -p "Are you sure? [y/n]: " -r;
+echo -e "Total packets to send: \e[1m\e[36m$(($TOTAL_MSG_TO_SEND))\e[0m packets will be sent"
+if [ $PASS_CONFIRM = false ]
+then
+  read -p "Are you sure? [y/n]: " -r;
+else
+  REPLY=y
+fi
 
 if [[ $REPLY =~ ^[Yy]$ ]] 
 then
