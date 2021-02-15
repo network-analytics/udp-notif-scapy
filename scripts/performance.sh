@@ -1,5 +1,7 @@
 #!/bin/bash
 
+## USAGE: sudo ./performance.sh <instances> <messages> <big|small> <dest_IP> <dest_port>
+
 # Run as root
 if [ "$EUID" -ne 0 ];
 then
@@ -51,7 +53,8 @@ fi
 echo -e "Sending messages to \e[1m\\e[36m$DEST_IP:$DEST_PORT\e[0m";
 echo -e "Using \e[1m\\e[36m$JSON\e[0m json file";
 echo -e "Launching \e[1m\\e[36m$INSTANCES\e[0m instances of scapy";
-echo -e "Summary: \e[1m\e[36m$MESSAGES\e[0m messages, \e[1m\e[36m$(($MESSAGES * $PACKETS_PER_MESSAGE))\e[0m packets will be sent for every scapy. "
+echo -e "Summary for every scapy: \e[1m\e[36m$MESSAGES\e[0m messages, \e[1m\e[36m$(($MESSAGES * $PACKETS_PER_MESSAGE))\e[0m packets will be sent for every scapy. "
+echo -e "Total messages to send: \e[1m\e[36m$(($MESSAGES * $INSTANCES))\e[0m messages will be sent"
 echo -e "Total packets to send: \e[1m\e[36m$(($TOTAL_MSG_TO_SEND))\e[0m packets will be sent"
 if [ $PASS_CONFIRM = false ]
 then
