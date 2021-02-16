@@ -73,6 +73,12 @@ then
     sudo python3 $SOURCE_FOLDER/main.py -n $MESSAGES -s big -i $ADDITIONAL_ID -a $MESSAGES 192.168.42.$IP_LAST $DEST_IP 8080 $DEST_PORT &
   done
   echo -e "\e[1m\\e[36m$INSTANCES\e[0m have been launched";
+  wait
+  echo "Launching last $ADDITIONAL_ID"
+  for i in `seq 0 $((9))` ;
+  do 
+    sudo python3 $SOURCE_FOLDER/main.py -n 1 -s small -i 49993648 192.168.42.$IP_LAST $DEST_IP 8080 $DEST_PORT
+  done
 else 
   echo -e "Operation cancelled: \e[1m\e[31mNo scapys have been launched"
 fi
