@@ -17,18 +17,19 @@ INSTANCES=20
 JSON=big   # big or small json file
 
 NB_ARGS=$#
-if [ $NB_ARGS = 5 ] || [ $NB_ARGS = 6 ];
+if [ $NB_ARGS = 6 ] || [ $NB_ARGS = 7 ];
 then
   INSTANCES=$1
   MESSAGES=$2
   JSON=$3
-  DEST_IP=$4
-  DEST_PORT=$5
+  VLEN=$4
+  DEST_IP=$5
+  DEST_PORT=$6
 else
   echo -e "\e[1m\e[33mUsing default parameters. Use all 5 or 6 parameters if needed.\e[39m\e[0m"
 fi
 
-if [ $NB_ARGS = 6 ] && [ "$6" = "-y" ];
+if [ $NB_ARGS = 7 ] && [ "$7" = "-y" ];
 then
   PASS_CONFIRM=true
 else 
@@ -74,8 +75,10 @@ then
   done
   echo -e "\e[1m\\e[36m$INSTANCES\e[0m have been launched";
   wait
-  echo "Launching last $ADDITIONAL_ID"
-  for i in `seq 0 $((9))` ;
+  
+  # Sending last messages to stop client_performance client
+  echo "Sending $VLEN messages with observation_domain_id 49993648"
+  for i in `seq 0 $(($VLEN - 1))` ;
   do 
     sudo python3 $SOURCE_FOLDER/main.py -n 1 -s small -i 49993648 192.168.42.$IP_LAST $DEST_IP 8080 $DEST_PORT
   done
