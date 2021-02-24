@@ -4,7 +4,7 @@ import os
 import random
 from unyte_generator.utils.unyte_message_gen import mock_message_generator
 from unyte_generator.utils.unyte_logger import unyte_logger
-from unyte_generator.models.unyte_global import UDPN_header_length, OPT_header_length
+from unyte_generator.models.unyte_global import IP_header_length, UDP_header_length, UDPN_header_length, OPT_header_length
 from unyte_generator.models.udpn import UDPN
 from unyte_generator.models.opt import OPT
 from unyte_generator.models.payload import PAYLOAD
@@ -58,15 +58,16 @@ class udp_notif_generator:
                 packet[PAYLOAD].message = current_message
                 packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
             else:
-                packet[UDPN].header_length = UDPN_header_length + OPT_header_length
-                packet[OPT].segment_id = packet_increment
                 if (len(current_message[maximum_length * packet_increment:]) > maximum_length):
                     packet[PAYLOAD].message = current_message[maximum_length * packet_increment:maximum_length * (packet_increment + 1)]
-                    packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
+                    logging.warn(packet[PAYLOAD].message)
                 else:
-                    packet[PAYLOAD].message = current_message[maximum_length * packet_increment:]
-                    packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
+                    packet[PAYLOAD].message = current_message[maximum_length * packet_increment:len(current_message)]
+                    logging.warn(packet[PAYLOAD].message)
                     packet[OPT].last = 1
+                packet[UDPN].header_length += OPT_header_length
+                packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
+                packet[OPT].segment_id = packet_increment
             packet_list.append(packet)
         return packet_list
 
@@ -106,14 +107,14 @@ class udp_notif_generator:
 
         self.logger.log_used_args(self)
         current_message = self.generate_mock_message()
-        maximum_length = self.mtu - UDPN_header_length
+        maximum_length = self.mtu - IP_header_length - UDP_header_length - UDPN_header_length
 
         lost_packets = 0
         forwarded_packets = 0
         message_increment = 0
 
         if len(current_message) > maximum_length:
-            maximum_length = self.mtu - UDPN_header_length - OPT_header_length
+            maximum_length -= OPT_header_length
             packet_amount = len(current_message) // maximum_length
             if len(current_message) % maximum_length != 0:
                 packet_amount += 1

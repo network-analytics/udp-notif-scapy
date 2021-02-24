@@ -53,8 +53,11 @@ Continuous stream of messages like the previous one
 
 2 messages of 5 shuffled segments of size 1500 with a json payload, from observation domains 10 and 11, with 0.1 loss probability and 0.1 second wait time between messages, logging control messages and segment headers
 
+## Scripts usage
+
+`sudo ./scripts/performance.sh 20 100 big 10 192.0.2.66 8081`
+
+10 instances generating 100 messages with a small json payload, with a vlen of 10 (necessary argument that permits the c collector to shut itself down), to 192.0.2.66 on port 8081. Add -y as a last argument if you want to bypass the warning.
+
 ## Docker container
 See [Docker docs](docker)
-
-## Launch multiple simulations
-- `./launch_multiple.sh <number_messages>` : launches multiple instances of the generator simuling multiple source ips and ports
