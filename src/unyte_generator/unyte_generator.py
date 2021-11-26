@@ -79,9 +79,9 @@ class udp_notif_generator:
             packet[UDPN].observation_domain_id = current_domain_id
             packet[UDPN].message_id = current_message_id
             if (self.probability_of_loss == 0):
-                send(packet, verbose=0)
+                send(packet, verbose=3)
             elif random.randint(1, int(1000 * (1 / self.probability_of_loss))) >= 1000:
-                send(packet, verbose=0)
+                send(packet, verbose=3)
             else:
                 current_message_lost_packets += 1
                 if len(packet_list) == 1:
