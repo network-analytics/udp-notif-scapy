@@ -1,5 +1,6 @@
 import logging 
 from unyte_generator.models.udpn import UDPN
+from unyte_generator.models.udpn_legacy import UDPN_legacy
 from unyte_generator.models.opt import OPT
 from unyte_generator.models.payload import PAYLOAD
 
@@ -22,6 +23,13 @@ class unyte_logger:
         attrs = vars(args)
         logging.info('Used args: ' + ', '.join("%s: %s" % item for item in attrs.items()))
 
+    def log_header_udpn_legacy(self, packet):
+        logging.info("packet version = " + str(packet[UDPN_legacy].version))
+        logging.info("packet encoding type = " + str(packet[UDPN_legacy].encoding_type))
+        logging.info("packet message length = " + str(packet[UDPN_legacy].message_length))
+        logging.info("packet observation domain id = " + str(packet[UDPN_legacy].observation_domain_id))
+        logging.info("packet message id = " + str(packet[UDPN_legacy].message_id))
+
     def log_header_udpn(self, packet):
         logging.info("packet version = " + str(packet[UDPN].version))
         logging.info("packet space = " + str(packet[UDPN].space))
@@ -37,9 +45,12 @@ class unyte_logger:
         logging.info("packet segment id = " + str(packet[OPT].segment_id))
         logging.info("packet last = " + str(packet[OPT].last))
 
-    def log_packet(self, packet):
+    def log_packet(self, packet, legacy: bool):
         logging.info("---------------- packet ----------------")
-        self.log_header_udpn(packet)
+        if legacy:
+            self.log_header_udpn_legacy(packet)
+        else:
+            self.log_header_udpn(packet)
         logging.debug("packet message = " + str(packet[PAYLOAD].message.decode()))
         logging.info("-------------- end packet --------------")
 

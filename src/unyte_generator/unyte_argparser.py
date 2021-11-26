@@ -43,6 +43,8 @@ class unyte_argparser():
                                  default="warning", choices=["none", "warning", "info", "debug"], help='Logging mode, warning by default, set to none for no logs, info for headers, debug for payloads')
         self.parser.add_argument('--capture', '-c', type=int,
                                  default=0, help='Set to 1 if you need a wireshark capture of the forwarded packets')
+        self.parser.add_argument('--legacy', '-o', type=int,
+                                 default=0, help='Set to 1 if you generate legacy headers: draft-ietf-netconf-udp-pub-channel-05')
 
     def parse_args(self):
         return self.parser.parse_args()
