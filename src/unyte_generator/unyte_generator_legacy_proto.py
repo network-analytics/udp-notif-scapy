@@ -10,7 +10,7 @@ from unyte_generator.models.payload import PAYLOAD
 from unyte_generator.models.udpn_legacy import UDPN_legacy
 from unyte_generator.models.unyte_global import UDPN_LEGACY_HEADER_LEN
 from unyte_generator.utils.unyte_logger import unyte_logger
-from unyte_generator.utils.unyte_message_gen import mock_message_generator
+from unyte_generator.utils.unyte_message_gen import Mock_payload_reader
 
 
 class UDP_notif_generator_legacy:
@@ -34,7 +34,7 @@ class UDP_notif_generator_legacy:
         self.capture = args.capture
         self.legacy = args.legacy == 1
 
-        self.mock_generator = mock_message_generator()
+        self.mock_generator = Mock_payload_reader()
 
         self.pid = os.getpid()
         self.logger = unyte_logger(self.logging_level, self.pid)
