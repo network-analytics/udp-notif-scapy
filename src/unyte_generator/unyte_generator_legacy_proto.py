@@ -22,7 +22,6 @@ class UDP_notif_generator_legacy:
         self.destination_port = int(args.destination_port[0])
         self.initial_domain = args.initial_domain
         self.additional_domains = args.additional_domains
-        self.message_size = args.message_size
         self.message_amount = args.message_amount
         if self.message_amount == 0:
             self.message_amount = float('inf')
@@ -46,14 +45,15 @@ class UDP_notif_generator_legacy:
     def generate_mock_payload(self, nb_payloads: int) -> list:
         return self.mock_payload_reader.get_json_push_update_notif(nb_payloads=nb_payloads)
 
-    def generate_packet_list(self, current_message):
+    def generate_packet_list(self, yang_push_msgs: list):
         packet_list = []
-        packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN_legacy()/PAYLOAD()
-        packet.sport = self.source_port
-        packet.dport = self.destination_port
-        packet[PAYLOAD].message = current_message
-        packet[UDPN_legacy].message_length = UDPN_LEGACY_HEADER_LEN + len(packet[PAYLOAD].message)
-        packet_list.append(packet)
+        for yang_push_payload in yang_push_msgs:
+            packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN_legacy()/PAYLOAD()
+            packet.sport = self.source_port
+            packet.dport = self.destination_port
+            packet[PAYLOAD].message = yang_push_payload
+            packet[UDPN_legacy].message_length = UDPN_LEGACY_HEADER_LEN + len(packet[PAYLOAD].message)
+            packet_list.append(packet)
         return packet_list
 
     def forward_current_message(self, packet_list, current_domain_id):
@@ -82,13 +82,13 @@ class UDP_notif_generator_legacy:
         timer_start = time.time()
 
         self.logger.log_used_args(self)
-        current_message = self.generate_mock_payload(nb_payloads=self.message_amount)
+        yang_push_msgs: list = self.generate_mock_payload(nb_payloads=self.message_amount)
 
         lost_packets = 0
         forwarded_packets = 0
 
         # Generate packet only once
-        packets_list = self.generate_packet_list(current_message)
+        packets_list: list = self.generate_packet_list(yang_push_msgs)
         obs_domain_id = self.initial_domain
         for _ in range(self.message_amount):
             current_message_lost_packets = self.forward_current_message(packets_list, obs_domain_id)
