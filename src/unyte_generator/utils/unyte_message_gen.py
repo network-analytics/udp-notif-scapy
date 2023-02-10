@@ -6,12 +6,21 @@ from datetime import datetime, timedelta
 class Mock_payload_reader:
 
     def __init__(self) -> None:
-        pass
+        self.msg_payloads: dict = {}
 
     def __read_json(self, path) -> dict:
-        json_payload = ""
+        if path in self.msg_payloads:
+            now = datetime.now()
+            msg_payload = self.msg_payloads[path]
+            msg_payload['ietf-notification:notification']['eventTime'] = now.strftime('%Y-%m-%dT%H:%M:%SZ')
+            return self.msg_payloads[path]
+
+        json_payload = None
         with open(path, 'r') as f:
             json_payload = json.load(f)
+
+        self.msg_payloads[path] = json_payload
+
         return json_payload
 
     def get_json_push_update_notif(self, nb_payloads: int) -> list:

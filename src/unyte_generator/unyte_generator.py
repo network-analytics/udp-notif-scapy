@@ -10,7 +10,7 @@ from unyte_generator.models.opt import SEGMENTATION_OPT
 from unyte_generator.models.payload import PAYLOAD
 from unyte_generator.models.udpn import UDPN
 from unyte_generator.models.unyte_global import (UDPN_HEADER_LEN,
-                                                 UDPN_SEGMENTATION_OPT_LEN)
+                                                 UDPN_SEGMENTATION_OPT_LEN, PCAP_FILENAME)
 from unyte_generator.utils.unyte_logger import unyte_logger
 from unyte_generator.utils.unyte_message_gen import Mock_payload_reader
 
@@ -70,14 +70,11 @@ class UDP_notif_generator:
 
                 packet.sport = self.source_port
                 packet.dport = self.destination_port
-                print("segmented? %u" % udp_notif_segmented_pckts)
                 if udp_notif_segmented_pckts == 1:
-                    print("segmented1? %u" % udp_notif_segmented_pckts)
                     packet[UDPN].header_length = UDPN_HEADER_LEN
                     packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
                     packet[PAYLOAD].message = payload
                 else:
-                    print("segmented2? %u" % udp_notif_segmented_pckts)
                     packet[UDPN].header_length = UDPN_HEADER_LEN + UDPN_SEGMENTATION_OPT_LEN
                     packet[SEGMENTATION_OPT].segment_id = packet_increment
                     if (len(payload[payload_per_msg_len * packet_increment:]) > payload_per_msg_len):
@@ -115,15 +112,29 @@ class UDP_notif_generator:
                 self.logger.log_packet(packet, False)
             else:
                 self.logger.log_segment(packet, packet[SEGMENTATION_OPT].segment_id)
-            self.save_pcap('captured_udp_notif.pcap', packet)
+            self.save_pcap(PCAP_FILENAME, packet)
             msg_id += 1
         return current_message_lost_packets
 
-    def send_udp_notif(self):
-        timer_start = time.time()
+    def __send_infinite_stream_udp_notif(self):
+        observation_domain_id = self.initial_domain
+        while True:
+            yang_push_payloads: list[str] = self.generate_mock_payload(nb_payloads=1)
 
-        self.logger.log_used_args(self)
-        yang_push_payloads: list[str] = self.generate_mock_payload(nb_payloads=self.message_amount)
+            # Generate packet only once
+            udp_notif_msgs: list[list] = self.generate_udp_notif_packets(yang_push_payloads)
+
+            for udp_notif_msg in udp_notif_msgs:
+                self.forward_current_message(udp_notif_msg, observation_domain_id)
+
+                time.sleep(self.waiting_time)
+                observation_domain_id += 1
+
+                if observation_domain_id > (self.initial_domain + self.additional_domains):
+                    observation_domain_id = self.initial_domain
+
+    def __send_n_udp_notif(self, message_to_send: int):
+        yang_push_payloads: list[str] = self.generate_mock_payload(nb_payloads=message_to_send)
 
         lost_packets = 0
         forwarded_packets = 0
@@ -142,9 +153,20 @@ class UDP_notif_generator:
 
             if observation_domain_id > (self.initial_domain + self.additional_domains):
                 observation_domain_id = self.initial_domain
+        logging.warn('Sent ' + str(forwarded_packets) + ' messages')
+        logging.info('Simulated %d lost packets from %d total packets', lost_packets, (forwarded_packets + lost_packets))
+
+
+    def send_udp_notif(self):
+        timer_start = time.time()
+
+        self.logger.log_used_args(self)
+        print(self.message_amount)
+        if self.message_amount == float('inf'):
+            self.__send_infinite_stream_udp_notif()
+        else:
+            self.__send_n_udp_notif(message_to_send=self.message_amount)
 
         timer_end = time.time()
-        generation_total_duration = timer_end - timer_start
-        logging.warn('Sent ' + str(forwarded_packets) + ' in ' + str(generation_total_duration))
-        logging.info('Simulated %d lost packets from %d total packets', lost_packets, (forwarded_packets + lost_packets))
-        return forwarded_packets
+        execution_time = timer_end - timer_start
+        logging.info('Execution time: %d seconds', execution_time)

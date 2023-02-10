@@ -8,7 +8,7 @@ from scapy.layers.inet import IP, UDP
 
 from unyte_generator.models.payload import PAYLOAD
 from unyte_generator.models.udpn_legacy import UDPN_legacy
-from unyte_generator.models.unyte_global import UDPN_LEGACY_HEADER_LEN
+from unyte_generator.models.unyte_global import UDPN_LEGACY_HEADER_LEN, PCAP_FILENAME
 from unyte_generator.utils.unyte_logger import unyte_logger
 from unyte_generator.utils.unyte_message_gen import Mock_payload_reader
 
@@ -74,15 +74,28 @@ class UDP_notif_generator_legacy:
                 logging.info("simulating packet number 0 from message_id " + str(packet[UDPN_legacy].message_id) + " lost")
             self.logger.log_packet(packet, True)
             msg_id += 1
-            self.save_pcap('filtered.pcap', packet)
+            self.save_pcap(PCAP_FILENAME, packet)
 
         return current_message_lost_packets
 
-    def send_udp_notif(self):
-        timer_start = time.time()
+    def __stream_infinite_udp_notif(self):
+        obs_domain_id = self.initial_domain
+        while True:
+            yang_push_msgs: list = self.generate_mock_payload(nb_payloads=1)
 
-        self.logger.log_used_args(self)
-        yang_push_msgs: list = self.generate_mock_payload(nb_payloads=self.message_amount)
+            # Generate packet only once
+            packets_list: list = self.generate_packet_list(yang_push_msgs)
+            for packet in packets_list:
+                self.forward_current_message(packet, obs_domain_id)
+                time.sleep(self.waiting_time)
+
+                obs_domain_id += 1
+                if obs_domain_id > (self.initial_domain + self.additional_domains):
+                    obs_domain_id = self.initial_domain
+
+
+    def __send_n_udp_notif(self, message_to_send: int):
+        yang_push_msgs: list = self.generate_mock_payload(nb_payloads=message_to_send)
 
         lost_packets = 0
         forwarded_packets = 0
@@ -90,18 +103,27 @@ class UDP_notif_generator_legacy:
         # Generate packet only once
         packets_list: list = self.generate_packet_list(yang_push_msgs)
         obs_domain_id = self.initial_domain
-        for _ in range(self.message_amount):
-            current_message_lost_packets = self.forward_current_message(packets_list, obs_domain_id)
-            forwarded_packets += len(packets_list) - current_message_lost_packets
+        for packet in packets_list:
+            current_message_lost_packets = self.forward_current_message(packet, obs_domain_id)
+            forwarded_packets += len(packet) - current_message_lost_packets
             lost_packets += current_message_lost_packets
             time.sleep(self.waiting_time)
 
             obs_domain_id += 1
             if obs_domain_id > (self.initial_domain + self.additional_domains):
                 obs_domain_id = self.initial_domain
+        logging.warn('Sent ' + str(forwarded_packets) + ' packets')
+        logging.info('Simulated %d lost packets from %d total packets', lost_packets, (forwarded_packets + lost_packets))
+
+    def send_udp_notif(self):
+        timer_start = time.time()
+        self.logger.log_used_args(self)
+
+        if self.message_amount == float('inf'):
+            self.__stream_infinite_udp_notif()
+        else:
+            self.__send_n_udp_notif(message_to_send=self.message_amount)
 
         timer_end = time.time()
-        generation_total_duration = timer_end - timer_start
-        logging.warn('Sent ' + str(forwarded_packets) + ' in ' + str(generation_total_duration))
-        logging.info('Simulated %d lost packets from %d total packets', lost_packets, (forwarded_packets + lost_packets))
-        return forwarded_packets
+        execution_time = timer_end - timer_start
+        logging.info('Execution time: %d seconds', execution_time)
