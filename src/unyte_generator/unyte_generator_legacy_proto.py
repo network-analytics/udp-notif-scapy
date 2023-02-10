@@ -1,14 +1,16 @@
-import time
 import logging
 import os
 import random
-from unyte_generator.utils.unyte_message_gen import mock_message_generator
-from unyte_generator.utils.unyte_logger import unyte_logger
-from unyte_generator.models.unyte_global import UDPN_LEGACY_HEADER_LEN
-from unyte_generator.models.udpn_legacy import UDPN_legacy
-from unyte_generator.models.payload import PAYLOAD
-from scapy.layers.inet import IP, UDP
+import time
+
 from scapy.all import send, wrpcap
+from scapy.layers.inet import IP, UDP
+
+from unyte_generator.models.payload import PAYLOAD
+from unyte_generator.models.udpn_legacy import UDPN_legacy
+from unyte_generator.models.unyte_global import UDPN_LEGACY_HEADER_LEN
+from unyte_generator.utils.unyte_logger import unyte_logger
+from unyte_generator.utils.unyte_message_gen import mock_message_generator
 
 
 class UDP_notif_generator_legacy:
@@ -55,14 +57,15 @@ class UDP_notif_generator_legacy:
         packet_list.append(packet)
         return packet_list
 
-    def forward_current_message(self, packet_list, current_domain_id, current_message_id):
+    def forward_current_message(self, packet_list, current_domain_id):
         current_message_lost_packets = 0
         if (self.random_order == 1):
             random.shuffle(packet_list)
-        
+
+        msg_id = 0
         for packet in packet_list:
             packet[UDPN_legacy].observation_domain_id = current_domain_id
-            packet[UDPN_legacy].message_id = current_message_id
+            packet[UDPN_legacy].message_id = msg_id
             if (self.probability_of_loss == 0):
                 send(packet, verbose=0)
             elif random.randint(1, int(1000 * (1 / self.probability_of_loss))) >= 1000:
@@ -71,42 +74,32 @@ class UDP_notif_generator_legacy:
                 current_message_lost_packets += 1
                 logging.info("simulating packet number 0 from message_id " + str(packet[UDPN_legacy].message_id) + " lost")
             self.logger.log_packet(packet, self.legacy)
-
+            msg_id += 1
             self.save_pcap('filtered.pcap', packet)
+
         return current_message_lost_packets
 
     def send_udp_notif(self):
         timer_start = time.time()
-        observation_domains = []
-        message_ids = {}
-        for i in range(1 + self.additional_domains):
-            observation_domains.append(self.initial_domain + i)
-            message_ids[observation_domains[i]] = 0
 
         self.logger.log_used_args(self)
         current_message = self.generate_mock_message()
-        maximum_length = self.mtu - UDPN_LEGACY_HEADER_LEN
 
         lost_packets = 0
         forwarded_packets = 0
-        message_increment = 0
-
-        packet_amount = 1
 
         # Generate packet only once
         packets_list = self.generate_packet_list(current_message)
-
-        while message_increment < self.message_amount:
-            current_domain_id = observation_domains[message_increment % len(observation_domains)]
-            current_message_id = message_ids[current_domain_id]
-            message_ids[current_domain_id] += 1
-
-            current_message_lost_packets = self.forward_current_message(packets_list, current_domain_id, current_message_id)
-
+        obs_domain_id = self.initial_domain
+        for _ in range(self.message_amount):
+            current_message_lost_packets = self.forward_current_message(packets_list, obs_domain_id)
             forwarded_packets += len(packets_list) - current_message_lost_packets
             lost_packets += current_message_lost_packets
             time.sleep(self.waiting_time)
-            message_increment += 1
+
+            obs_domain_id += 1
+            if obs_domain_id > (self.initial_domain + self.additional_domains):
+                obs_domain_id = self.initial_domain
 
         timer_end = time.time()
         generation_total_duration = timer_end - timer_start

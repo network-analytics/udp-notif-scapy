@@ -42,7 +42,7 @@ $ sudo python3 src/main.py <src_ipv4> <dst_ipv4> <port_src> <port_dst>
 
 - `--capture x` or `-c x` : (INT) Set to 1 if you need a wireshark capture of the forwarded packets, x = 1 or x = 0, Default: `0`
 
-- `--legacy x` or `-e x` : (INT) Set to 1 if you generate legacy headers: [draft-ietf-netconf-udp-pub-channel-05](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-pub-channel/), x = 1 or x = 0, Default: `0`
+- `--legacy x` or `-e x` : (INT) Set to 1 if you generate legacy headers: [draft-ietf-netconf-udp-pub-channel-05](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-pub-channel/), /!\ No segmentation is possible. x = 1 or x = 0, Default: `0`
 
 ## Examples
 

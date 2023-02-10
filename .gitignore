@@ -138,5 +138,6 @@ dmypy.json
 cython_debug/
 
 # own custom files
-filtered.pcap
+captured_udp_notif.pcap
 pids
+.DS_Store
