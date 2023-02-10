@@ -1,10 +1,12 @@
 from scapy.all import Packet, BitField
-from .unyte_global import OPT_header_length
+from .unyte_global import UDPN_SEGMENTATION_OPT_LEN
 
 
-class OPT(Packet):
-    name = "OPT"
-    fields_desc = [BitField("type", 1, 8),
-                   BitField("option_length", OPT_header_length, 8),
-                   BitField("segment_id", 0, 15),
-                   BitField("last", 0, 1), ]
+class SEGMENTATION_OPT(Packet):
+    name = "SEGMENTATION_OPT"
+    fields_desc = [
+        BitField(name="type", default=1, size=8),
+        BitField(name="option_length", default=UDPN_SEGMENTATION_OPT_LEN, size=8),
+        BitField(name="segment_id", default=0, size=15),
+        BitField(name="last", default=0, size=1)
+    ]

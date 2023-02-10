@@ -1,7 +1,7 @@
 import logging 
 from unyte_generator.models.udpn import UDPN
 from unyte_generator.models.udpn_legacy import UDPN_legacy
-from unyte_generator.models.opt import OPT
+from unyte_generator.models.opt import SEGMENTATION_OPT
 from unyte_generator.models.payload import PAYLOAD
 
 class unyte_logger:
@@ -25,7 +25,7 @@ class unyte_logger:
 
     def log_header_udpn_legacy(self, packet):
         logging.info("packet version = " + str(packet[UDPN_legacy].version))
-        logging.info("packet encoding type = " + str(packet[UDPN_legacy].encoding_type))
+        logging.info("packet encoding type = " + str(packet[UDPN_legacy].media_type))
         logging.info("packet message length = " + str(packet[UDPN_legacy].message_length))
         logging.info("packet observation domain id = " + str(packet[UDPN_legacy].observation_domain_id))
         logging.info("packet message id = " + str(packet[UDPN_legacy].message_id))
@@ -33,17 +33,17 @@ class unyte_logger:
     def log_header_udpn(self, packet):
         logging.info("packet version = " + str(packet[UDPN].version))
         logging.info("packet space = " + str(packet[UDPN].space))
-        logging.info("packet encoding type = " + str(packet[UDPN].encoding_type))
+        logging.info("packet encoding type = " + str(packet[UDPN].media_type))
         logging.info("packet header length = " + str(packet[UDPN].header_length))
         logging.info("packet message length = " + str(packet[UDPN].message_length))
         logging.info("packet observation domain id = " + str(packet[UDPN].observation_domain_id))
         logging.info("packet message id = " + str(packet[UDPN].message_id))
 
     def log_header_opt(self, packet):
-        logging.info("packet type = " + str(packet[OPT].type))
-        logging.info("packet option length = " + str(packet[OPT].option_length))
-        logging.info("packet segment id = " + str(packet[OPT].segment_id))
-        logging.info("packet last = " + str(packet[OPT].last))
+        logging.info("packet type = " + str(packet[SEGMENTATION_OPT].type))
+        logging.info("packet option length = " + str(packet[SEGMENTATION_OPT].option_length))
+        logging.info("packet segment id = " + str(packet[SEGMENTATION_OPT].segment_id))
+        logging.info("packet last = " + str(packet[SEGMENTATION_OPT].last))
 
     def log_packet(self, packet, legacy: bool):
         logging.info("---------------- packet ----------------")

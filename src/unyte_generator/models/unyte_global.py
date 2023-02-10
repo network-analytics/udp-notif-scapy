@@ -1,3 +1,3 @@
-UDPN_header_length = 12
-UDPN_legacy_header_length = 12
-OPT_header_length = 4
+UDPN_HEADER_LEN = 12
+UDPN_LEGACY_HEADER_LEN = 12
+UDPN_SEGMENTATION_OPT_LEN = 4

@@ -4,15 +4,15 @@ import os
 import random
 from unyte_generator.utils.unyte_message_gen import mock_message_generator
 from unyte_generator.utils.unyte_logger import unyte_logger
-from unyte_generator.models.unyte_global import UDPN_header_length, OPT_header_length
+from unyte_generator.models.unyte_global import UDPN_HEADER_LEN, UDPN_SEGMENTATION_OPT_LEN
 from unyte_generator.models.udpn import UDPN
-from unyte_generator.models.opt import OPT
+from unyte_generator.models.opt import SEGMENTATION_OPT
 from unyte_generator.models.payload import PAYLOAD
 from scapy.layers.inet import IP, UDP
 from scapy.all import send, wrpcap
 
 
-class udp_notif_generator:
+class UDP_notif_generator:
 
     def __init__(self, args):
         self.source_ip = args.source_ip[0]
@@ -52,22 +52,22 @@ class udp_notif_generator:
             if packet_amount == 1:
                 packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/PAYLOAD()
             else:
-                packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/OPT()/PAYLOAD()
+                packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/SEGMENTATION_OPT()/PAYLOAD()
             packet.sport = self.source_port
             packet.dport = self.destination_port
             if packet_amount == 1:
                 packet[PAYLOAD].message = current_message
                 packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
             else:
-                packet[UDPN].header_length = UDPN_header_length + OPT_header_length
-                packet[OPT].segment_id = packet_increment
+                packet[UDPN].header_length = UDPN_HEADER_LEN + UDPN_SEGMENTATION_OPT_LEN
+                packet[SEGMENTATION_OPT].segment_id = packet_increment
                 if (len(current_message[maximum_length * packet_increment:]) > maximum_length):
                     packet[PAYLOAD].message = current_message[maximum_length * packet_increment:maximum_length * (packet_increment + 1)]
                     packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
                 else:
                     packet[PAYLOAD].message = current_message[maximum_length * packet_increment:]
                     packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
-                    packet[OPT].last = 1
+                    packet[SEGMENTATION_OPT].last = 1
             packet_list.append(packet)
         return packet_list
 
@@ -88,12 +88,12 @@ class udp_notif_generator:
                 if len(packet_list) == 1:
                     logging.info("simulating packet number 0 from message_id " + str(packet[UDPN].message_id) + " lost")
                 else:
-                    logging.info("simulating packet number " + str(packet[OPT].segment_id) +
+                    logging.info("simulating packet number " + str(packet[SEGMENTATION_OPT].segment_id) +
                                  " from message_id " + str(packet[UDPN].message_id) + " lost")
             if len(packet_list) == 1:
                 self.logger.log_packet(packet, self.legacy)
             else:
-                self.logger.log_segment(packet, packet[OPT].segment_id)
+                self.logger.log_segment(packet, packet[SEGMENTATION_OPT].segment_id)
             self.save_pcap('filtered.pcap', packet)
         return current_message_lost_packets
 
@@ -107,14 +107,14 @@ class udp_notif_generator:
 
         self.logger.log_used_args(self)
         current_message = self.generate_mock_message()
-        maximum_length = self.mtu - UDPN_header_length
+        maximum_length = self.mtu - UDPN_HEADER_LEN
 
         lost_packets = 0
         forwarded_packets = 0
         message_increment = 0
 
         if len(current_message) > maximum_length:
-            maximum_length = self.mtu - UDPN_header_length - OPT_header_length
+            maximum_length = self.mtu - UDPN_HEADER_LEN - UDPN_SEGMENTATION_OPT_LEN
             packet_amount = len(current_message) // maximum_length
             if len(current_message) % maximum_length != 0:
                 packet_amount += 1

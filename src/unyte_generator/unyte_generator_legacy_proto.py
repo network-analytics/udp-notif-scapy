@@ -4,14 +4,14 @@ import os
 import random
 from unyte_generator.utils.unyte_message_gen import mock_message_generator
 from unyte_generator.utils.unyte_logger import unyte_logger
-from unyte_generator.models.unyte_global import UDPN_legacy_header_length
+from unyte_generator.models.unyte_global import UDPN_LEGACY_HEADER_LEN
 from unyte_generator.models.udpn_legacy import UDPN_legacy
 from unyte_generator.models.payload import PAYLOAD
 from scapy.layers.inet import IP, UDP
 from scapy.all import send, wrpcap
 
 
-class udp_notif_generator_legacy:
+class UDP_notif_generator_legacy:
 
     def __init__(self, args):
         self.source_ip = args.source_ip[0]
@@ -51,7 +51,7 @@ class udp_notif_generator_legacy:
         packet.sport = self.source_port
         packet.dport = self.destination_port
         packet[PAYLOAD].message = current_message
-        packet[UDPN_legacy].message_length = UDPN_legacy_header_length + len(packet[PAYLOAD].message)
+        packet[UDPN_legacy].message_length = UDPN_LEGACY_HEADER_LEN + len(packet[PAYLOAD].message)
         packet_list.append(packet)
         return packet_list
 
@@ -85,7 +85,7 @@ class udp_notif_generator_legacy:
 
         self.logger.log_used_args(self)
         current_message = self.generate_mock_message()
-        maximum_length = self.mtu - UDPN_legacy_header_length
+        maximum_length = self.mtu - UDPN_LEGACY_HEADER_LEN
 
         lost_packets = 0
         forwarded_packets = 0

@@ -2,7 +2,7 @@
 import argparse
 
 
-class unyte_argparser():
+class Unyte_argparser():
 
     def __init__(self):
 
