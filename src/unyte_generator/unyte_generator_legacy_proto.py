@@ -4,15 +4,14 @@ import os
 import random
 from unyte_generator.utils.unyte_message_gen import mock_message_generator
 from unyte_generator.utils.unyte_logger import unyte_logger
-from unyte_generator.models.unyte_global import UDPN_header_length, OPT_header_length
-from unyte_generator.models.udpn import UDPN
-from unyte_generator.models.opt import OPT
+from unyte_generator.models.unyte_global import UDPN_legacy_header_length
+from unyte_generator.models.udpn_legacy import UDPN_legacy
 from unyte_generator.models.payload import PAYLOAD
 from scapy.layers.inet import IP, UDP
 from scapy.all import send, wrpcap
 
 
-class udp_notif_generator:
+class udp_notif_generator_legacy:
 
     def __init__(self, args):
         self.source_ip = args.source_ip[0]
@@ -46,29 +45,14 @@ class udp_notif_generator:
     def generate_mock_message(self):
         return self.mock_generator.generate_message(self.message_size)
 
-    def generate_packet_list(self, packet_amount, maximum_length, current_message):
+    def generate_packet_list(self, current_message):
         packet_list = []
-        for packet_increment in range(packet_amount):
-            if packet_amount == 1:
-                packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/PAYLOAD()
-            else:
-                packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/OPT()/PAYLOAD()
-            packet.sport = self.source_port
-            packet.dport = self.destination_port
-            if packet_amount == 1:
-                packet[PAYLOAD].message = current_message
-                packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
-            else:
-                packet[UDPN].header_length = UDPN_header_length + OPT_header_length
-                packet[OPT].segment_id = packet_increment
-                if (len(current_message[maximum_length * packet_increment:]) > maximum_length):
-                    packet[PAYLOAD].message = current_message[maximum_length * packet_increment:maximum_length * (packet_increment + 1)]
-                    packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
-                else:
-                    packet[PAYLOAD].message = current_message[maximum_length * packet_increment:]
-                    packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
-                    packet[OPT].last = 1
-            packet_list.append(packet)
+        packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN_legacy()/PAYLOAD()
+        packet.sport = self.source_port
+        packet.dport = self.destination_port
+        packet[PAYLOAD].message = current_message
+        packet[UDPN_legacy].message_length = UDPN_legacy_header_length + len(packet[PAYLOAD].message)
+        packet_list.append(packet)
         return packet_list
 
     def forward_current_message(self, packet_list, current_domain_id, current_message_id):
@@ -77,23 +61,17 @@ class udp_notif_generator:
             random.shuffle(packet_list)
         
         for packet in packet_list:
-            packet[UDPN].observation_domain_id = current_domain_id
-            packet[UDPN].message_id = current_message_id
+            packet[UDPN_legacy].observation_domain_id = current_domain_id
+            packet[UDPN_legacy].message_id = current_message_id
             if (self.probability_of_loss == 0):
                 send(packet, verbose=0)
             elif random.randint(1, int(1000 * (1 / self.probability_of_loss))) >= 1000:
                 send(packet, verbose=0)
             else:
                 current_message_lost_packets += 1
-                if len(packet_list) == 1:
-                    logging.info("simulating packet number 0 from message_id " + str(packet[UDPN].message_id) + " lost")
-                else:
-                    logging.info("simulating packet number " + str(packet[OPT].segment_id) +
-                                 " from message_id " + str(packet[UDPN].message_id) + " lost")
-            if len(packet_list) == 1:
-                self.logger.log_packet(packet, self.legacy)
-            else:
-                self.logger.log_segment(packet, packet[OPT].segment_id)
+                logging.info("simulating packet number 0 from message_id " + str(packet[UDPN_legacy].message_id) + " lost")
+            self.logger.log_packet(packet, self.legacy)
+
             self.save_pcap('filtered.pcap', packet)
         return current_message_lost_packets
 
@@ -107,22 +85,16 @@ class udp_notif_generator:
 
         self.logger.log_used_args(self)
         current_message = self.generate_mock_message()
-        maximum_length = self.mtu - UDPN_header_length
+        maximum_length = self.mtu - UDPN_legacy_header_length
 
         lost_packets = 0
         forwarded_packets = 0
         message_increment = 0
 
-        if len(current_message) > maximum_length:
-            maximum_length = self.mtu - UDPN_header_length - OPT_header_length
-            packet_amount = len(current_message) // maximum_length
-            if len(current_message) % maximum_length != 0:
-                packet_amount += 1
-        else:
-            packet_amount = 1
+        packet_amount = 1
 
         # Generate packet only once
-        packets_list = self.generate_packet_list(packet_amount, maximum_length, current_message)
+        packets_list = self.generate_packet_list(current_message)
 
         while message_increment < self.message_amount:
             current_domain_id = observation_domains[message_increment % len(observation_domains)]
