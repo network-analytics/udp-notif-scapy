@@ -24,7 +24,6 @@ class UDP_notif_generator:
         self.destination_port = int(args.destination_port[0])
         self.initial_domain = args.initial_domain
         self.additional_domains = args.additional_domains
-        self.message_size = args.message_size
         self.message_amount = args.message_amount
         if self.message_amount == 0:
             self.message_amount = float('inf')
@@ -34,55 +33,62 @@ class UDP_notif_generator:
         self.random_order: bool = args.random_order == 1
         self.logging_level = args.logging_level
         self.capture = args.capture
-        self.legacy = args.legacy == 1
 
-        self.mock_generator = Mock_payload_reader()
+        self.mock_payload_reader = Mock_payload_reader()
 
         self.pid = os.getpid()
         self.logger = unyte_logger(self.logging_level, self.pid)
-        logging.info("Unyte scapy generator launched")
+        logging.info("Unyte scapy generator started")
 
     def save_pcap(self, filename, packet):
         if self.capture == 1:
             wrpcap(filename, packet, append=True)
 
-    def generate_mock_message(self):
-        return self.mock_generator.generate_message(self.message_size)
+    def generate_mock_payload(self, nb_payloads: int) -> list:
+        return self.mock_payload_reader.get_json_push_update_notif(nb_payloads=nb_payloads)
 
-    def generate_udp_notif_packets(self, msg_payload):
+    def generate_udp_notif_packets(self, yang_push_msgs: list) -> list:
         payload_per_msg_len = self.mtu - UDPN_HEADER_LEN
-        packet_amount = 1
 
-        if (len(msg_payload) + UDPN_HEADER_LEN) > self.mtu:
-            payload_per_msg_len = self.mtu - UDPN_HEADER_LEN - UDPN_SEGMENTATION_OPT_LEN
-            packet_amount = len(msg_payload) // payload_per_msg_len
-            if len(msg_payload) % payload_per_msg_len != 0:
-                packet_amount += 1
-
-        udp_notif_packets = []
-        for packet_increment in range(packet_amount):
-            if packet_amount == 1:
-                packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/PAYLOAD()
+        udp_notif_packets: list = [] # list[list[msg]]
+        for payload in yang_push_msgs:
+            # check if segmentation is needed
+            if (len(payload) + UDPN_HEADER_LEN) > self.mtu:
+                payload_per_msg_len = self.mtu - UDPN_HEADER_LEN - UDPN_SEGMENTATION_OPT_LEN
+                udp_notif_segmented_pckts = len(payload) // payload_per_msg_len
+                if len(payload) % payload_per_msg_len != 0:
+                    udp_notif_segmented_pckts += 1
             else:
-                packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/SEGMENTATION_OPT()/PAYLOAD()
-            packet.sport = self.source_port
-            packet.dport = self.destination_port
+                udp_notif_segmented_pckts = 1
 
-            if packet_amount == 1:
-                packet[UDPN].header_length = UDPN_HEADER_LEN
-                packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
-                packet[PAYLOAD].message = msg_payload
-            else:
-                packet[UDPN].header_length = UDPN_HEADER_LEN + UDPN_SEGMENTATION_OPT_LEN
-                packet[SEGMENTATION_OPT].segment_id = packet_increment
-                if (len(msg_payload[payload_per_msg_len * packet_increment:]) > payload_per_msg_len):
-                    packet[PAYLOAD].message = msg_payload[payload_per_msg_len * packet_increment:payload_per_msg_len * (packet_increment + 1)]
-                    packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
+            aggregated_msgs: list = []
+            for packet_increment in range(udp_notif_segmented_pckts):
+                if udp_notif_segmented_pckts == 1:
+                    packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/PAYLOAD()
                 else:
-                    packet[PAYLOAD].message = msg_payload[payload_per_msg_len * packet_increment:]
+                    packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN()/SEGMENTATION_OPT()/PAYLOAD()
+
+                packet.sport = self.source_port
+                packet.dport = self.destination_port
+                print("segmented? %u" % udp_notif_segmented_pckts)
+                if udp_notif_segmented_pckts == 1:
+                    print("segmented1? %u" % udp_notif_segmented_pckts)
+                    packet[UDPN].header_length = UDPN_HEADER_LEN
                     packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
-                    packet[SEGMENTATION_OPT].last = 1
-            udp_notif_packets.append(packet)
+                    packet[PAYLOAD].message = payload
+                else:
+                    print("segmented2? %u" % udp_notif_segmented_pckts)
+                    packet[UDPN].header_length = UDPN_HEADER_LEN + UDPN_SEGMENTATION_OPT_LEN
+                    packet[SEGMENTATION_OPT].segment_id = packet_increment
+                    if (len(payload[payload_per_msg_len * packet_increment:]) > payload_per_msg_len):
+                        packet[PAYLOAD].message = payload[payload_per_msg_len * packet_increment:payload_per_msg_len * (packet_increment + 1)]
+                        packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
+                    else:
+                        packet[PAYLOAD].message = payload[payload_per_msg_len * packet_increment:]
+                        packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
+                        packet[SEGMENTATION_OPT].last = 1
+                aggregated_msgs.append(packet)
+            udp_notif_packets.append(aggregated_msgs)
         return udp_notif_packets
 
     def forward_current_message(self, udp_notif_msgs: list, current_domain_id: int) -> int:
@@ -106,7 +112,7 @@ class UDP_notif_generator:
                     logging.info("simulating packet number " + str(packet[SEGMENTATION_OPT].segment_id) +
                                  " from message_id " + str(packet[UDPN].message_id) + " lost")
             if len(udp_notif_msgs) == 1:
-                self.logger.log_packet(packet, self.legacy)
+                self.logger.log_packet(packet, False)
             else:
                 self.logger.log_segment(packet, packet[SEGMENTATION_OPT].segment_id)
             self.save_pcap('captured_udp_notif.pcap', packet)
@@ -117,18 +123,17 @@ class UDP_notif_generator:
         timer_start = time.time()
 
         self.logger.log_used_args(self)
-        msg_payload = self.generate_mock_message()
+        yang_push_payloads: list[str] = self.generate_mock_payload(nb_payloads=self.message_amount)
 
         lost_packets = 0
         forwarded_packets = 0
 
         # Generate packet only once
-        udp_notif_msgs = self.generate_udp_notif_packets(msg_payload)
+        udp_notif_msgs: list[list] = self.generate_udp_notif_packets(yang_push_payloads)
         observation_domain_id = self.initial_domain
 
-        for _ in range(self.message_amount):
-
-            current_message_lost_packets: int = self.forward_current_message(udp_notif_msgs, observation_domain_id)
+        for udp_notif_msg in udp_notif_msgs:
+            current_message_lost_packets: int = self.forward_current_message(udp_notif_msg, observation_domain_id)
             forwarded_packets += len(udp_notif_msgs) - current_message_lost_packets
             lost_packets += current_message_lost_packets
 

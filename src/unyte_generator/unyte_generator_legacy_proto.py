@@ -32,9 +32,8 @@ class UDP_notif_generator_legacy:
         self.random_order = args.random_order
         self.logging_level = args.logging_level
         self.capture = args.capture
-        self.legacy = args.legacy == 1
 
-        self.mock_generator = Mock_payload_reader()
+        self.mock_payload_reader = Mock_payload_reader()
 
         self.pid = os.getpid()
         self.logger = unyte_logger(self.logging_level, self.pid)
@@ -44,8 +43,8 @@ class UDP_notif_generator_legacy:
         if self.capture == 1:
             wrpcap(filename, packet, append=True)
 
-    def generate_mock_message(self):
-        return self.mock_generator.generate_message(self.message_size)
+    def generate_mock_payload(self, nb_payloads: int) -> list:
+        return self.mock_payload_reader.get_json_push_update_notif(nb_payloads=nb_payloads)
 
     def generate_packet_list(self, current_message):
         packet_list = []
@@ -73,7 +72,7 @@ class UDP_notif_generator_legacy:
             else:
                 current_message_lost_packets += 1
                 logging.info("simulating packet number 0 from message_id " + str(packet[UDPN_legacy].message_id) + " lost")
-            self.logger.log_packet(packet, self.legacy)
+            self.logger.log_packet(packet, True)
             msg_id += 1
             self.save_pcap('filtered.pcap', packet)
 
@@ -83,7 +82,7 @@ class UDP_notif_generator_legacy:
         timer_start = time.time()
 
         self.logger.log_used_args(self)
-        current_message = self.generate_mock_message()
+        current_message = self.generate_mock_payload(nb_payloads=self.message_amount)
 
         lost_packets = 0
         forwarded_packets = 0

@@ -23,9 +23,6 @@ class Unyte_argparser():
                                  default=0, help='Identifier of the initial observation domain')
         self.parser.add_argument('--additional-domains', '-a', type=int,
                                  default=0, help='Amount of observation domains in addition to the first')
-        # MESSAGE TYPE AND AMOUNT
-        self.parser.add_argument('--message-size', '-s',
-                                 default="small", choices=["small", "big"], help='Size of transmitted json file')
         self.parser.add_argument('--message-amount', '-n', type=int,
                                  default=1, help='Amount of notification messages to send')
         # FORWARDING RULES
