@@ -1,6 +1,6 @@
 # Scapy generator for UDP-notif
 
-This repository implements a mock generator for UDP-notif messages as defined in [draft-ietf-netconf-udp-notif-06](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-06). This mock generator supports IPv4.
+This repository implements a mock generator for UDP-notif messages as defined in [draft-ietf-netconf-udp-notif-08](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-08). This mock generator supports IPv4.
 
 ## Dependencies (Tested in Python 3.6.8)
 Required libraries are specified in `src/requirements.txt`

@@ -8,10 +8,10 @@ if __name__ == "__main__":
     parser = Unyte_argparser()
     args = parser.parse_args()
 
-    # use old udp-notif headers
+    # use old udp-notif headers: draft-ietf-netconf-udp-pub-channel-05
     if args.legacy == 1:
         generator_legacy = UDP_notif_generator_legacy(args)
         generator_legacy.send_udp_notif()
-    else: # draft-ietf-netconf-udp-notif-04
+    else: # draft-ietf-netconf-udp-notif-08
         generator = UDP_notif_generator(args)
         generator.send_udp_notif()
