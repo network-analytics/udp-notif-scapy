@@ -1,0 +1,35 @@
+<rpc message-id="101"
+  xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <edit-config>
+    <target>
+      <running/>
+    </target>
+    <config>
+      <subscriptions xmlns="urn:ietf:params:xml:ns:yang:ietf-subscribed-notifications">
+        <subscription>
+          <id>6666</id>
+          <stream-subtree-filter>some-subtree-filter</stream-subtree-filter>
+          <stream>some-stream</stream>
+          <transport xmlns:unt="urn:ietf:params:xml:ns:yang:ietf-udp-notif-transport">unt:udp-notif</transport>
+          <receivers>
+            <receiver>
+              <name>subscription-specific-receiver-def</name>
+              <receiver-instance-ref xmlns="urn:ietf:params:xml:ns:yang:ietf-subscribed-notif-receivers">global-udp-notif-receiver-def</receiver-instance-ref>
+            </receiver>
+          </receivers>
+        </subscription>
+        <receiver-instances xmlns="urn:ietf:params:xml:ns:yang:ietf-subscribed-notif-receivers">
+          <receiver-instance>
+            <name>global-udp-notif-receiver-def</name>
+            <udp-notif-receiver xmlns="urn:ietf:params:xml:ns:yang:ietf-udp-notif-transport">
+              <address>192.0.5.1</address>
+              <port>12345</port>
+              <enable-segmentation>false</enable-segmentation>
+              <max-segment-size/>
+            </udp-notif-receiver>
+          </receiver-instance>
+        </receiver-instances>
+      </subscriptions>
+    </config>
+  </edit-config>
+</rpc>
