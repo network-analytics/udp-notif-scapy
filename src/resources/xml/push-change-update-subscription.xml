@@ -1,0 +1,24 @@
+<notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
+  <eventTime>2022-09-02T10:59:55.32Z</eventTime>
+  <push-change-update xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push">
+    <id>2222</id>
+    <datastore-changes>
+      <yang-patch>
+        <patch-id>patch_54</patch-id>
+        <comment>Changing encoding to JSON and increasing the period to 10 minutes</comment>
+        <edit>
+          <edit-id>id_change_1</edit-id>
+          <operation>merge</operation>
+          <target xmlns:sn="urn:ietf:params:xml:ns:yang:ietf-subscribed-notifications">/sn:subscriptions/subscription[id=2222]</target>
+          <value>
+            <encoding>encode-json</encoding>
+            <periodic xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push">
+              <period>60000</period>
+            </periodic>
+          </value>
+        </edit>
+      </yang-patch>
+    </datastore-changes>
+  </push-change-update>
+</notification>
+
