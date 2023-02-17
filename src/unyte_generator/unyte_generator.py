@@ -32,7 +32,7 @@ class UDP_notif_generator:
         self.probability_of_loss = args.probability_of_loss
         self.random_order: bool = args.random_order == 1
         self.logging_level = args.logging_level
-        self.capture = args.capture
+        self.capture_file_path: str = args.capture
 
         self.mock_payload_reader = Mock_payload_reader()
 
@@ -40,9 +40,9 @@ class UDP_notif_generator:
         self.logger = unyte_logger(self.logging_level, self.pid)
         logging.info("Unyte scapy generator started")
 
-    def save_pcap(self, filename, packet):
-        if self.capture == 1:
-            wrpcap(filename, packet, append=True)
+    def save_pcap(self, packet):
+        if self.capture_file_path is not None:
+            wrpcap(self.capture_file_path, packet, append=True)
 
     def generate_mock_payload(self, nb_payloads: int) -> list:
         return self.mock_payload_reader.get_json_push_update_notif(nb_payloads=nb_payloads)
@@ -112,7 +112,7 @@ class UDP_notif_generator:
                 self.logger.log_packet(packet, False)
             else:
                 self.logger.log_segment(packet, packet[SEGMENTATION_OPT].segment_id)
-            self.save_pcap(PCAP_FILENAME, packet)
+            self.save_pcap(packet)
             msg_id += 1
         return current_message_lost_packets
 
