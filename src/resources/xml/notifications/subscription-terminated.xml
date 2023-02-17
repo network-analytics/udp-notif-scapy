@@ -1,0 +1,7 @@
+<notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
+  <eventTime>2022-09-02T10:59:55.32Z</eventTime>
+  <subscription-terminated xmlns="urn:ietf:params:xml:ns:yang:ietf-subscribed-notification">
+    <id>6666</id>
+    <reason>no-such-subscription</reason>
+  </subscription-terminated>
+</notification>

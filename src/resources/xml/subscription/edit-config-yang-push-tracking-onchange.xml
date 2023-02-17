@@ -8,7 +8,8 @@
       <subscriptions xmlns="urn:ietf:params:xml:ns:yang:ietf-subscribed-notifications">
         <subscription>
           <id>2222</id>
-          <datastore xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push">ds:operational</datastore>
+          <datastore xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push"
+            xmlns:ds="urn:ietf:params:xml:ns:yang:ietf-datastores">ds:operational</datastore>
           <datastore-xpath-filter xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push"
             xmlns:sn="urn:ietf:params:xml:ns:yang:ietf-subscribed-notifications">/sn:subscriptions</datastore-xpath-filter>
           <transport xmlns:unt="urn:ietf:params:xml:ns:yang:ietf-udp-notif-transport">unt:udp-notif</transport>

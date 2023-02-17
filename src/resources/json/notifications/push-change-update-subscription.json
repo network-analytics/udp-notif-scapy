@@ -1,0 +1,27 @@
+{
+  "ietf-notification:notification": {
+    "eventTime": "2023-03-25T08:30:11.22Z",
+    "ietf-yang-push:push-change-update": {
+      "id": 2222,
+      "datastore-contents": {
+        "yang-patch": {
+          "patch-id": "patch_54",
+          "comment": "Changing encoding to JSON and increasing the period to 10 minutes",
+          "edit": [
+            {
+              "edit-id": "id_change_1",
+              "operation": "merge",
+              "target": "/ietf-subscribed-notifications:subscriptions/subscription[id=2222]",
+              "value": {
+                "ietf-subscribed-notifications:encoding": "ietf-subscribed-notifications:encode-json",
+                "ietf-yang-push:periodic": {
+                  "period": 60000
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
