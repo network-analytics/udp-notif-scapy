@@ -4,7 +4,7 @@ import time
 
 from scapy.all import wrpcap
 
-from unyte_generator.utils.unyte_logger import unyte_logger
+from unyte_generator.utils.unyte_logger import Unyte_logger
 from unyte_generator.utils.unyte_message_gen import Mock_payload_reader
 
 
@@ -23,14 +23,14 @@ class UDP_notif_generator:
         self.mtu = args.mtu
         self.waiting_time = args.waiting_time
         self.probability_of_loss = args.probability_of_loss
-        self.random_order: bool = args.random_order == 1
+        # self.random_order: bool = args.random_order == 1
         self.logging_level = args.logging_level
         self.capture_file_path: str = args.capture
 
         self.mock_payload_reader = Mock_payload_reader()
 
         self.pid = os.getpid()
-        self.logger = unyte_logger(self.logging_level, self.pid)
+        self.logger = Unyte_logger(self.logging_level, self.pid)
         self.msg_id: dict = {}
         logging.info("Unyte scapy generator started")
 

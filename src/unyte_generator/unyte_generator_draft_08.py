@@ -60,8 +60,8 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
 
     def __forward_current_message(self, udp_notif_msgs: list, current_domain_id: int) -> int:
         current_message_lost_packets = 0
-        if self.random_order:
-            random.shuffle(udp_notif_msgs)
+        # if self.random_order: # FIXME: random reorder
+        #     random.shuffle(udp_notif_msgs)
         
         if current_domain_id not in self.msg_id:
             self.msg_id[current_domain_id] = 0
@@ -91,7 +91,7 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
 
         return current_message_lost_packets
 
-    def _send_infinite_stream_udp_notif(self):
+    def _stream_infinite_udp_notif(self):
         observation_domain_id = self.initial_domain
         while True:
             yang_push_payloads: list[str] = self.generate_mock_payload(nb_payloads=1)
@@ -117,6 +117,8 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
         # Generate packet only once
         udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(yang_push_payloads)
         observation_domain_id = self.initial_domain
+        # if self.random_order:
+        #     random.shuffle(udp_notif_msgs)
 
         for udp_notif_msg_group in udp_notif_msgs:
             current_message_lost_packets: int = self.__forward_current_message(udp_notif_msg_group, observation_domain_id)

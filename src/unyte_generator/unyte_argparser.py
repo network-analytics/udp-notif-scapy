@@ -1,6 +1,5 @@
 
 import argparse
-import pathlib
 
 class Unyte_argparser():
 
@@ -29,12 +28,12 @@ class Unyte_argparser():
         self.parser.add_argument('--mtu', '-m', type=int, default=1500,
                                  help='Maximum Transmission Unit')
         self.parser.add_argument('--waiting-time', '-w', type=float, default=0,
-                                 help='Sleep time between sending two notification messages')
-        # RANDOMNESS
+                                 help='Sleep time between sending two notification messages in seconds')
+        # LOSS
         self.parser.add_argument('--probability-of-loss', '-p', type=float, default=0,
                                  help='Probability of a packet loss during transmission')
-        self.parser.add_argument('--random-order', '-r', type=int, default=0,
-                                 help='Set to 1 if segments must be send in a random order')
+        # self.parser.add_argument('--random-order', '-r', action='store_true',
+        #                          help='Simulating random order of the messages')
         # UTILITY
         self.parser.add_argument('--logging-level', '-l', default="info", choices=["none", "warning", "info", "debug"],
                                  help='Logging mode, warning by default, set to none for no logs, info for headers, debug for payloads')

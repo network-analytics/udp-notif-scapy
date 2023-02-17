@@ -19,6 +19,8 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
     def __generate_packet_list(self, yang_push_msgs: list):
         packet_list: list = []
         for yang_push_payload in yang_push_msgs:
+            if (len(yang_push_payload) + UDPN_LEGACY_HEADER_LEN) > self.mtu:
+                logging.warning("MTU not used, no segmentation supported in legacy protocol")
             packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN_legacy()/PAYLOAD()
             packet.sport = self.source_port
             packet.dport = self.destination_port
@@ -29,8 +31,8 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
 
     def __forward_current_message(self, packet_list, current_domain_id):
         current_message_lost_packets = 0
-        if (self.random_order == 1):
-            random.shuffle(packet_list)
+        # if self.random_order == 1:
+        #     random.shuffle(packet_list)
 
         if current_domain_id not in self.msg_id:
             self.msg_id[current_domain_id] = 0
