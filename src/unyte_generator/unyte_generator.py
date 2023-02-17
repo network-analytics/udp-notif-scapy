@@ -1,16 +1,9 @@
 import logging
 import os
-import random
 import time
 
-from scapy.all import send, wrpcap
-from scapy.layers.inet import IP, UDP
+from scapy.all import wrpcap
 
-from unyte_generator.models.opt import SEGMENTATION_OPT
-from unyte_generator.models.payload import PAYLOAD
-from unyte_generator.models.udpn import UDPN
-from unyte_generator.models.unyte_global import (UDPN_HEADER_LEN,
-                                                 UDPN_SEGMENTATION_OPT_LEN)
 from unyte_generator.utils.unyte_logger import unyte_logger
 from unyte_generator.utils.unyte_message_gen import Mock_payload_reader
 
@@ -38,6 +31,7 @@ class UDP_notif_generator:
 
         self.pid = os.getpid()
         self.logger = unyte_logger(self.logging_level, self.pid)
+        self.msg_id: dict = {}
         logging.info("Unyte scapy generator started")
 
     def save_pcap(self, packet):

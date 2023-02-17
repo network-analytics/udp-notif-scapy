@@ -62,8 +62,11 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
         current_message_lost_packets = 0
         if self.random_order:
             random.shuffle(udp_notif_msgs)
+        
+        if current_domain_id not in self.msg_id:
+            self.msg_id[current_domain_id] = 0
 
-        msg_id = 0
+        msg_id = self.msg_id[current_domain_id]
         for packet in udp_notif_msgs:
             packet[UDPN].observation_domain_id = current_domain_id
             packet[UDPN].message_id = msg_id
@@ -84,6 +87,8 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
                 self.logger.log_segment(packet, packet[SEGMENTATION_OPT].segment_id)
             self.save_pcap(packet)
             msg_id += 1
+        self.msg_id[current_domain_id] = msg_id
+
         return current_message_lost_packets
 
     def _send_infinite_stream_udp_notif(self):
@@ -123,6 +128,6 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
 
             if observation_domain_id > (self.initial_domain + self.additional_domains):
                 observation_domain_id = self.initial_domain
-        logging.warn('Sent ' + str(forwarded_packets) + ' messages')
+        logging.info('Sent ' + str(forwarded_packets) + ' messages')
         logging.info('Simulated %d lost packets from %d total packets', lost_packets, (forwarded_packets + lost_packets))
 

@@ -32,7 +32,10 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
         if (self.random_order == 1):
             random.shuffle(packet_list)
 
-        msg_id = 0
+        if current_domain_id not in self.msg_id:
+            self.msg_id[current_domain_id] = 0
+
+        msg_id = self.msg_id[current_domain_id]
         for packet in packet_list:
             packet[UDPN_legacy].observation_domain_id = current_domain_id
             packet[UDPN_legacy].message_id = msg_id
@@ -46,6 +49,7 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
             self.logger.log_packet(packet, True)
             msg_id += 1
             self.save_pcap(packet)
+        self.msg_id[current_domain_id] = msg_id
 
         return current_message_lost_packets
 
