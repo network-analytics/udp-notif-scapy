@@ -24,7 +24,7 @@ class Mock_payload_reader:
         return json_payload
 
     def get_json_push_update_notif(self, nb_payloads: int) -> list:
-        json_mock_payload: dict = self.__read_json(str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/json/push-update.json')
+        json_mock_payload: dict = self.__read_json(str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/json/notifications/push-update.json')
         yang_push_msgs: list = []
         now = datetime.now()
         for i in range(nb_payloads):
