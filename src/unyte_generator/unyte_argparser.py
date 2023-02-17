@@ -38,7 +38,7 @@ class Unyte_argparser():
         self.parser.add_argument('--logging-level', '-l', default="info", choices=["none", "warning", "info", "debug"],
                                  help='Logging mode, warning by default, set to none for no logs, info for headers, debug for payloads')
         self.parser.add_argument('--encoding', '-e', default="json", choices=["json"],
-                                 help='Logging mode, warning by default, set to none for no logs, info for headers, debug for payloads')
+                                 help='Encoding of the UDP-notif payload')
         self.parser.add_argument('--capture', '-c', type=str,
                                  help='Capture the mocked generated packets to a pcap file.')
         self.parser.add_argument('--legacy', '-leg', action='store_true',
