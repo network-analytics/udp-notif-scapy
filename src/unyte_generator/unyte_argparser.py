@@ -23,7 +23,7 @@ class Unyte_argparser():
         self.parser.add_argument('--additional-domains', '-a', type=int, default=0,
                                  help='Amount of observation domains in addition to the first')
         self.parser.add_argument('--message-amount', '-n', type=int, default=1,
-                                 help='Amount of notification messages to send')
+                                 help="Amount of 'push-update' notification to send")
         # FORWARDING RULES
         self.parser.add_argument('--mtu', '-m', type=int, default=1500,
                                  help='Maximum Transmission Unit')

@@ -93,8 +93,15 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
 
     def _stream_infinite_udp_notif(self):
         observation_domain_id = self.initial_domain
+
+        # Send subscription-started notification first
+        subs_started: str = self.mock_payload_reader.get_json_subscription_started_notif()
+        udp_notif_msgs: list[list] = self.__generate_udp_notif_packets([subs_started])
+        for udp_notif_msg in udp_notif_msgs:
+            self.__forward_current_message(udp_notif_msg, observation_domain_id)
+
         while True:
-            yang_push_payloads: list[str] = self.generate_mock_payload(nb_payloads=1)
+            yang_push_payloads: list[str] = self.mock_payload_reader.get_json_push_update_notif(nb_payloads=1)
 
             # Generate packet only once
             udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(yang_push_payloads)
@@ -109,13 +116,14 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
                     observation_domain_id = self.initial_domain
 
     def _send_n_udp_notif(self, message_to_send: int):
-        yang_push_payloads: list[str] = self.generate_mock_payload(nb_payloads=message_to_send)
+        payloads: list[str] = self._get_n_json_payloads(push_update_msgs=message_to_send)
 
         lost_packets = 0
         forwarded_packets = 0
 
         # Generate packet only once
-        udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(yang_push_payloads)
+        udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(payloads)
+
         observation_domain_id = self.initial_domain
         # if self.random_order:
         #     random.shuffle(udp_notif_msgs)

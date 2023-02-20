@@ -26,6 +26,7 @@ class UDP_notif_generator:
         # self.random_order: bool = args.random_order == 1
         self.logging_level = args.logging_level
         self.capture_file_path: str = args.capture
+        self.encoding: str = args.encoding
 
         self.mock_payload_reader = Mock_payload_reader()
 
@@ -38,8 +39,12 @@ class UDP_notif_generator:
         if self.capture_file_path is not None:
             wrpcap(self.capture_file_path, packet, append=True)
 
-    def generate_mock_payload(self, nb_payloads: int) -> list:
-        return self.mock_payload_reader.get_json_push_update_notif(nb_payloads=nb_payloads)
+    def _get_n_json_payloads(self, push_update_msgs: int) -> list:
+        payloads: list[str] = []
+        payloads += [self.mock_payload_reader.get_json_subscription_started_notif()]
+        payloads += self.mock_payload_reader.get_json_push_update_notif(nb_payloads=push_update_msgs)
+        payloads += [self.mock_payload_reader.get_json_subscription_terminated_notif()]
+        return payloads
 
     def _stream_infinite_udp_notif(self):
         raise ValueError("Abstract method: must be implemented")
