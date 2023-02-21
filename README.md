@@ -28,7 +28,7 @@ $ sudo python3 src/main.py <src_ipv4> <dst_ipv4> <port_src> <port_dst>
 
 - `--message-amount x` or `-n x` : (Integer) amount of messages to send, x >= 1, Default: `1`
 
-- `--encoding <encoding>` or `-e <encoding>`: (String) encoding of the UDP-notif payload. Options: [`json`]. Default: `json`.
+- `--encoding <encoding>` or `-e <encoding>`: (String) encoding of the UDP-notif payload. Options: [`json`, `xml`]. Default: `json`.
 
 - `--mtu x` or `-m x` : (Integer) maximum transmission unit, 16 < x < 65535, Default: `1500`
 
