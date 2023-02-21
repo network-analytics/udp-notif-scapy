@@ -46,10 +46,16 @@ class UDP_notif_generator:
         payloads += [self.mock_payload_reader.get_json_subscription_terminated_notif()]
         return payloads
 
-    def _stream_infinite_udp_notif(self):
+    def _get_n_xml_payloads(self, push_update_msgs: int) -> list:
+        payloads: list[str] = []
+        payloads += [self.mock_payload_reader.get_xml_subscription_started_notif()]
+        # payloads += self.mock_payload_reader.get_json_push_update_notif(nb_payloads=push_update_msgs)
+        # payloads += [self.mock_payload_reader.get_json_subscription_terminated_notif()]
+        return payloads
+    def _stream_infinite_udp_notif(self, encoding: str):
         raise ValueError("Abstract method: must be implemented")
 
-    def _send_n_udp_notif(self, message_to_send: int):
+    def _send_n_udp_notif(self, message_to_send: int, encoding: str):
         raise ValueError("Abstract method: must be implemented")
 
     def send_udp_notif(self):
@@ -57,9 +63,9 @@ class UDP_notif_generator:
         self.logger.log_used_args(self)
 
         if self.message_amount == float('inf'):
-            self._stream_infinite_udp_notif()
+            self._stream_infinite_udp_notif(encoding=self.encoding)
         else:
-            self._send_n_udp_notif(message_to_send=self.message_amount)
+            self._send_n_udp_notif(message_to_send=self.message_amount, encoding=self.encoding)
 
         timer_end = time.time()
         execution_time = timer_end - timer_start

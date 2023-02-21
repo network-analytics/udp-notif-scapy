@@ -9,5 +9,5 @@
     <periodic xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push">
       <period>100</period>
     </periodic>
-  </subscription-modified>
+  </subscription-started>
 </notification>

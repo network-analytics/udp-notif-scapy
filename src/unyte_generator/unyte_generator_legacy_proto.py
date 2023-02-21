@@ -16,7 +16,7 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
     def __init__(self, args):
         super().__init__(args=args)
 
-    def __generate_packet_list(self, yang_push_msgs: list):
+    def __generate_packet_list(self, yang_push_msgs: list, encoding: str):
         packet_list: list = []
         for yang_push_payload in yang_push_msgs:
             if (len(yang_push_payload) + UDPN_LEGACY_HEADER_LEN) > self.mtu:
@@ -26,6 +26,10 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
             packet.dport = self.destination_port
             packet[PAYLOAD].message = yang_push_payload
             packet[UDPN_legacy].message_length = UDPN_LEGACY_HEADER_LEN + len(packet[PAYLOAD].message)
+            if encoding == 'json':
+                packet[UDPN_legacy].media_type = 2
+            elif encoding == 'xml':
+                packet[UDPN_legacy].media_type = 3
             packet_list.append(packet)
         return packet_list
 
@@ -55,12 +59,12 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
 
         return current_message_lost_packets
 
-    def _stream_infinite_udp_notif(self):
+    def _stream_infinite_udp_notif(self, encoding: str):
         obs_domain_id = self.initial_domain
 
         # Send subscription-started notification first
         subs_started: str = self.mock_payload_reader.get_json_subscription_started_notif()
-        udp_notif_msgs: list[list] = self.__generate_packet_list([subs_started])
+        udp_notif_msgs: list[list] = self.__generate_packet_list(yang_push_msgs=[subs_started], encoding=encoding)
         for udp_notif_msg in udp_notif_msgs:
             self.__forward_current_message(udp_notif_msg, obs_domain_id)
 
@@ -68,7 +72,7 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
             yang_push_msgs: list = self.mock_payload_reader.get_json_push_update_notif(nb_payloads=1)
 
             # Generate packet only once
-            packets_list: list = self.__generate_packet_list(yang_push_msgs)
+            packets_list: list = self.__generate_packet_list(yang_push_msgs=yang_push_msgs, encoding=encoding)
             for packet in packets_list:
                 self.__forward_current_message(packet, obs_domain_id)
                 time.sleep(self.waiting_time)
@@ -78,14 +82,19 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
                     obs_domain_id = self.initial_domain
 
 
-    def _send_n_udp_notif(self, message_to_send: int):
-        payloads: list[str] = self._get_n_json_payloads(push_update_msgs=message_to_send)
+    def _send_n_udp_notif(self, message_to_send: int, encoding: str):
+        payloads: list[str] = []
+
+        if encoding == 'xml':
+            payloads = self._get_n_xml_payloads(push_update_msgs=message_to_send)
+        elif encoding == 'json':
+            payloads = self._get_n_json_payloads(push_update_msgs=message_to_send)
 
         lost_packets = 0
         forwarded_packets = 0
 
         # Generate packet only once
-        packets_list: list = self.__generate_packet_list(payloads)
+        packets_list: list = self.__generate_packet_list(yang_push_msgs=payloads, encoding=encoding)
         obs_domain_id = self.initial_domain
         for packet_group in packets_list:
             current_message_lost_packets = self.__forward_current_message(packet_group, obs_domain_id)

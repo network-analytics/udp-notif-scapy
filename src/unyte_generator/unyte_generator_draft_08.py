@@ -17,7 +17,7 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
     def __init__(self, args):
         super().__init__(args=args)
 
-    def __generate_udp_notif_packets(self, yang_push_msgs: list) -> list:
+    def __generate_udp_notif_packets(self, yang_push_msgs: list, encoding: str) -> list:
         payload_per_msg_len = self.mtu - UDPN_HEADER_LEN
 
         udp_notif_packets: list = [] # list[list[msg]]
@@ -54,6 +54,11 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
                         packet[PAYLOAD].message = payload[payload_per_msg_len * packet_increment:]
                         packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
                         packet[SEGMENTATION_OPT].last = 1
+                if encoding == 'json':
+                    packet[UDPN].media_type = 1
+                elif encoding == 'xml':
+                    packet[UDPN].media_type = 2
+
                 aggregated_msgs.append(packet)
             udp_notif_packets.append(aggregated_msgs)
         return udp_notif_packets
@@ -91,12 +96,12 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
 
         return current_message_lost_packets
 
-    def _stream_infinite_udp_notif(self):
+    def _stream_infinite_udp_notif(self, encoding: str):
         observation_domain_id = self.initial_domain
 
         # Send subscription-started notification first
         subs_started: str = self.mock_payload_reader.get_json_subscription_started_notif()
-        udp_notif_msgs: list[list] = self.__generate_udp_notif_packets([subs_started])
+        udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(yang_push_msgs=[subs_started], encoding=encoding)
         for udp_notif_msg in udp_notif_msgs:
             self.__forward_current_message(udp_notif_msg, observation_domain_id)
 
@@ -104,7 +109,7 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
             yang_push_payloads: list[str] = self.mock_payload_reader.get_json_push_update_notif(nb_payloads=1)
 
             # Generate packet only once
-            udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(yang_push_payloads)
+            udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(yang_push_msgs=yang_push_payloads, encoding=encoding)
 
             for udp_notif_msg in udp_notif_msgs:
                 self.__forward_current_message(udp_notif_msg, observation_domain_id)
@@ -115,14 +120,19 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
                 if observation_domain_id > (self.initial_domain + self.additional_domains):
                     observation_domain_id = self.initial_domain
 
-    def _send_n_udp_notif(self, message_to_send: int):
-        payloads: list[str] = self._get_n_json_payloads(push_update_msgs=message_to_send)
+    def _send_n_udp_notif(self, message_to_send: int, encoding: str):
+        payloads: list[str] = []
+
+        if encoding == 'xml':
+            payloads = self._get_n_xml_payloads(push_update_msgs=message_to_send)
+        elif encoding == 'json':
+            payloads = self._get_n_json_payloads(push_update_msgs=message_to_send)
 
         lost_packets = 0
         forwarded_packets = 0
 
         # Generate packet only once
-        udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(payloads)
+        udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(yang_push_msgs=payloads, encoding=encoding)
 
         observation_domain_id = self.initial_domain
         # if self.random_order:

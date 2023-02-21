@@ -1,6 +1,7 @@
 import json
 import pathlib
 from datetime import datetime, timedelta
+from xml.dom import minidom
 
 
 class Mock_payload_reader:
@@ -20,13 +21,31 @@ class Mock_payload_reader:
 
         return json_payload
 
+    def __read_xml(self, path) -> dict:
+        if path in self.cached_msg_payloads:
+            return self.cached_msg_payloads[path]
+
+        xml_payload = minidom.parse(path)
+
+        self.cached_msg_payloads[path] = xml_payload
+        return xml_payload
+
+    def get_xml_subscription_started_notif(self):
+        path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/subscription-started.xml'
+        xml_mock_payload: dict = self.__read_xml(path)
+        now = datetime.now()
+        root = xml_mock_payload.documentElement
+        eventTime_nodes = root.getElementsByTagName('eventTime')
+        first_eventTime_node = eventTime_nodes[0]
+        first_eventTime_node.firstChild.data = now.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return root.toxml()
+
     def get_json_subscription_started_notif(self):
         path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/json/notifications/subscription-started.json'
         json_mock_payload: dict = self.__read_json(path)
         now = datetime.now()
         json_mock_payload['ietf-notification:notification']['eventTime'] = now.strftime('%Y-%m-%dT%H:%M:%SZ')
         return json.dumps(json_mock_payload)
-
 
     def get_json_subscription_modified_notif(self):
         path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/json/notifications/subscription-modified.json'
@@ -43,7 +62,8 @@ class Mock_payload_reader:
         return json.dumps(json_mock_payload)
 
     def get_json_push_update_notif(self, nb_payloads: int) -> list:
-        json_mock_payload: dict = self.__read_json(str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/json/notifications/push-update.json')
+        json_mock_payload: dict = self.__read_json(str(pathlib.Path(__file__).parent.parent.parent.absolute()
+                                                       ) + '/resources/json/notifications/push-update.json')
         yang_push_msgs: list = []
         now = datetime.now()
         for i in range(nb_payloads):
