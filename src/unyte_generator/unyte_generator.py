@@ -49,9 +49,10 @@ class UDP_notif_generator:
     def _get_n_xml_payloads(self, push_update_msgs: int) -> list:
         payloads: list[str] = []
         payloads += [self.mock_payload_reader.get_xml_subscription_started_notif()]
-        # payloads += self.mock_payload_reader.get_json_push_update_notif(nb_payloads=push_update_msgs)
-        # payloads += [self.mock_payload_reader.get_json_subscription_terminated_notif()]
+        payloads += self.mock_payload_reader.get_xml_push_update_notif(nb_payloads=push_update_msgs)
+        payloads += [self.mock_payload_reader.get_xml_subscription_terminated_notif()]
         return payloads
+
     def _stream_infinite_udp_notif(self, encoding: str):
         raise ValueError("Abstract method: must be implemented")
 
