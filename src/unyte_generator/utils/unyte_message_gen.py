@@ -32,39 +32,49 @@ class Mock_payload_reader:
 
     ####################################################### XML #######################################################
 
-    def get_xml_subscription_started_notif(self, push_update_msgs: int = 1):
+    def get_xml_subscription_started_notif(self, msg_timestamp: datetime = datetime.now()):
         path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/subscription-started.xml'
         xml_mock_payload: dict = self.__read_xml(path)
-        now = datetime.now()
-        msg_timestamp = now - timedelta(minutes=(push_update_msgs + 1))
         root = xml_mock_payload.documentElement
         eventTime_nodes = root.getElementsByTagName('eventTime')
         first_eventTime_node = eventTime_nodes[0]
         first_eventTime_node.firstChild.data = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
         return root.toxml()
 
-    def get_xml_push_update_notif(self, nb_payloads: int) -> list:
-        path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/push-update.xml'
+    def get_xml_subscription_modified_notif(self, msg_timestamp: datetime = datetime.now()):
+        path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/subscription-modified.xml'
         xml_mock_payload: dict = self.__read_xml(path)
-        yang_push_msgs: list = []
-        now = datetime.now()
-        for i in range(nb_payloads):
-            msg_timestamp = now - timedelta(minutes=(nb_payloads-i))
-            root = xml_mock_payload.documentElement
-            eventTime_nodes = root.getElementsByTagName('eventTime')
-            first_eventTime_node = eventTime_nodes[0]
-            first_eventTime_node.firstChild.data = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
-            yang_push_msgs.append(root.toxml())
-        return yang_push_msgs
-
-    def get_xml_subscription_terminated_notif(self):
-        path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/subscription-terminated.xml'
-        xml_mock_payload: dict = self.__read_xml(path)
-        now = datetime.now()
         root = xml_mock_payload.documentElement
         eventTime_nodes = root.getElementsByTagName('eventTime')
         first_eventTime_node = eventTime_nodes[0]
-        first_eventTime_node.firstChild.data = now.strftime('%Y-%m-%dT%H:%M:%SZ')
+        first_eventTime_node.firstChild.data = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return root.toxml()
+
+    def get_xml_subscription_terminated_notif(self, msg_timestamp: datetime = datetime.now()):
+        path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/subscription-terminated.xml'
+        xml_mock_payload: dict = self.__read_xml(path)
+        root = xml_mock_payload.documentElement
+        eventTime_nodes = root.getElementsByTagName('eventTime')
+        first_eventTime_node = eventTime_nodes[0]
+        first_eventTime_node.firstChild.data = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return root.toxml()
+
+    def get_xml_push_update_1_notif(self, msg_timestamp: datetime = datetime.now()) -> list:
+        path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/push-update-1.xml'
+        xml_mock_payload: dict = self.__read_xml(path)
+        root = xml_mock_payload.documentElement
+        eventTime_nodes = root.getElementsByTagName('eventTime')
+        first_eventTime_node = eventTime_nodes[0]
+        first_eventTime_node.firstChild.data = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return root.toxml()
+
+    def get_xml_push_update_2_notif(self, msg_timestamp: datetime = datetime.now()) -> list:
+        path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/push-update-2.xml'
+        xml_mock_payload: dict = self.__read_xml(path)
+        root = xml_mock_payload.documentElement
+        eventTime_nodes = root.getElementsByTagName('eventTime')
+        first_eventTime_node = eventTime_nodes[0]
+        first_eventTime_node.firstChild.data = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
         return root.toxml()
     
     ####################################################### JSON #######################################################

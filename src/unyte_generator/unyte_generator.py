@@ -28,6 +28,8 @@ class UDP_notif_generator:
         self.capture_file_path: str = args.capture
         self.encoding: str = args.encoding
         self.update_yang_module: bool = args.update_yang
+        if self.update_yang_module and self.message_amount == float('inf'):
+            raise Exception("YANG updates are only supported for a finite value of messages. Please set a message_amount different from 0.")
 
         self.mock_payload_reader = Mock_payload_reader()
 
@@ -54,6 +56,9 @@ class UDP_notif_generator:
             payloads += [self.mock_payload_reader.get_json_push_update_1_notif(msg_timestamp=time_reference)]
 
         if self.update_yang_module:
+            time_reference = time_reference + timedelta(minutes=1)
+            payloads += [self.mock_payload_reader.get_json_subscription_modified_notif(msg_timestamp=time_reference)]
+
             for _ in range(push_update_msgs):
                 time_reference = time_reference + timedelta(minutes=1)
                 payloads += [self.mock_payload_reader.get_json_push_update_2_notif(msg_timestamp=time_reference)]
@@ -63,10 +68,28 @@ class UDP_notif_generator:
         return payloads
 
     def _get_n_xml_payloads(self, push_update_msgs: int) -> list:
+        time_reference: datetime = datetime.now()
+        if self.update_yang_module:
+            time_reference = time_reference - timedelta(minutes=(2*push_update_msgs))
+        else:
+            time_reference = time_reference - timedelta(minutes=(push_update_msgs))
+        
         payloads: list[str] = []
-        payloads += [self.mock_payload_reader.get_xml_subscription_started_notif(push_update_msgs=push_update_msgs)]
-        payloads += self.mock_payload_reader.get_xml_push_update_notif(nb_payloads=push_update_msgs)
-        payloads += [self.mock_payload_reader.get_xml_subscription_terminated_notif()]
+        payloads += [self.mock_payload_reader.get_xml_subscription_started_notif(msg_timestamp=time_reference)]
+        for _ in range(push_update_msgs):
+            time_reference = time_reference + timedelta(minutes=1)
+            payloads += [self.mock_payload_reader.get_xml_push_update_1_notif(msg_timestamp=time_reference)]
+        
+        if self.update_yang_module:
+            time_reference = time_reference + timedelta(minutes=1)
+            payloads += [self.mock_payload_reader.get_xml_subscription_modified_notif(msg_timestamp=time_reference)]
+
+            for _ in range(push_update_msgs):
+                time_reference = time_reference + timedelta(minutes=1)
+                payloads += [self.mock_payload_reader.get_xml_push_update_2_notif(msg_timestamp=time_reference)]
+        
+        time_reference = time_reference + timedelta(minutes=1)
+        payloads += [self.mock_payload_reader.get_xml_subscription_terminated_notif(msg_timestamp=time_reference)]
         return payloads
 
     def _stream_infinite_udp_notif(self, encoding: str):
