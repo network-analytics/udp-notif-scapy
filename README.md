@@ -40,7 +40,9 @@ $ sudo python3 src/main.py <src_ipv4> <dst_ipv4> <port_src> <port_dst>
 
 - `--capture <path>` or `-c <path>` : (String) Save a wireshark capture of the forwarded packets in the `<path>`. Default: `None` (disabled).
 
-- `--legacy` or `-leg` : Generate legacy headers as defined in [draft-ietf-netconf-udp-pub-channel-05](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-pub-channel/), /!\ No segmentation is possible. Default: Disabled
+- `--legacy` or `-leg` : Generate legacy headers as defined in [draft-ietf-netconf-udp-pub-channel-05](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-pub-channel/), /!\ No segmentation is possible. Default: Disabled.
+
+- `--update-yang` or `-upd`: Simulate a YANG module update to a backward compatible YANG module. Default: Disabled.
 
 ## Examples
 
@@ -52,6 +54,14 @@ $ sudo python3 src/main.py 192.0.2.65 192.0.2.66 10001 10010
 Continuous stream of YANG-push messages [RFC8641](https://www.rfc-editor.org/rfc/rfc8641) using UDP-notif as transport.
 ```shell
 $ sudo python3 src/main.py 192.0.2.66 192.0.2.66 10001 10010 -n 0
+```
+
+### Simulating a YANG subscription update
+
+This generator can also simulate a YANG module update in YANG-push.
+
+```shell
+$ TBD
 ```
 
 ## NETCONF configuration XML examples

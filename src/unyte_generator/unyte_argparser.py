@@ -43,6 +43,8 @@ class Unyte_argparser():
                                  help='Capture the mocked generated packets to a pcap file.')
         self.parser.add_argument('--legacy', '-leg', action='store_true',
                                  help='Generate legacy headers as defined in draft-ietf-netconf-udp-pub-channel-05.')
+        self.parser.add_argument('--update-yang', '-upd', action='store_true',
+                                help='Simulate a YANG module update to a backward compatible YANG module.')
 
     def parse_args(self):
         return self.parser.parse_args()

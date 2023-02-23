@@ -2,11 +2,11 @@ import logging
 import os
 import time
 
+from datetime import datetime, timedelta
 from scapy.all import wrpcap
 
 from unyte_generator.utils.unyte_logger import Unyte_logger
 from unyte_generator.utils.unyte_message_gen import Mock_payload_reader
-
 
 class UDP_notif_generator:
 
@@ -27,6 +27,7 @@ class UDP_notif_generator:
         self.logging_level = args.logging_level
         self.capture_file_path: str = args.capture
         self.encoding: str = args.encoding
+        self.update_yang_module: bool = args.update_yang
 
         self.mock_payload_reader = Mock_payload_reader()
 
@@ -40,10 +41,25 @@ class UDP_notif_generator:
             wrpcap(self.capture_file_path, packet, append=True)
 
     def _get_n_json_payloads(self, push_update_msgs: int) -> list:
+        time_reference: datetime = datetime.now()
+        if self.update_yang_module:
+            time_reference = time_reference - timedelta(minutes=(2*push_update_msgs))
+        else:
+            time_reference = time_reference - timedelta(minutes=(push_update_msgs))
+
         payloads: list[str] = []
-        payloads += [self.mock_payload_reader.get_json_subscription_started_notif(push_update_msgs=push_update_msgs)]
-        payloads += self.mock_payload_reader.get_json_push_update_notif(nb_payloads=push_update_msgs)
-        payloads += [self.mock_payload_reader.get_json_subscription_terminated_notif()]
+        payloads += [self.mock_payload_reader.get_json_subscription_started_notif(msg_timestamp=time_reference)]
+        for _ in range(push_update_msgs):
+            time_reference = time_reference + timedelta(minutes=1)
+            payloads += [self.mock_payload_reader.get_json_push_update_1_notif(msg_timestamp=time_reference)]
+
+        if self.update_yang_module:
+            for _ in range(push_update_msgs):
+                time_reference = time_reference + timedelta(minutes=1)
+                payloads += [self.mock_payload_reader.get_json_push_update_2_notif(msg_timestamp=time_reference)]
+
+        time_reference = time_reference + timedelta(minutes=1)
+        payloads += [self.mock_payload_reader.get_json_subscription_terminated_notif(msg_timestamp=time_reference)]
         return payloads
 
     def _get_n_xml_payloads(self, push_update_msgs: int) -> list:
