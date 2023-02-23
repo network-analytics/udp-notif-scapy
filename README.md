@@ -54,6 +54,12 @@ Continuous stream of YANG-push messages [RFC8641](https://www.rfc-editor.org/rfc
 $ sudo python3 src/main.py 192.0.2.66 192.0.2.66 10001 10010 -n 0
 ```
 
+## NETCONF configuration XML examples
+
+As defined in [RFC8641](https://www.rfc-editor.org/rfc/rfc8641), configured subscriptions are configured via Netconf RPC `<edit-config>`.
+
+Examples of configuration files can be found in [configurations](./src/resources/xml/subscription/).
+
 ## Docker container
 See [Docker docs](docker)
 
