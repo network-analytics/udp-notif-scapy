@@ -1,0 +1,10 @@
+<rpc-reply message-id="101"
+  xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <data xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring">
+    module foo {
+    //default format (yang) returned
+    //bar version 2020-10-10 yang module
+    //contents here ...
+    }
+  </data>
+</rpc-reply>

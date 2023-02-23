@@ -1,68 +1,47 @@
 import logging
-import os
 import random
 import time
 
-from scapy.all import send, wrpcap
+from scapy.all import send
 from scapy.layers.inet import IP, UDP
 
 from unyte_generator.models.payload import PAYLOAD
 from unyte_generator.models.udpn_legacy import UDPN_legacy
 from unyte_generator.models.unyte_global import UDPN_LEGACY_HEADER_LEN
-from unyte_generator.utils.unyte_logger import unyte_logger
-from unyte_generator.utils.unyte_message_gen import Mock_payload_reader
+from unyte_generator.unyte_generator import UDP_notif_generator
 
 
-class UDP_notif_generator_legacy:
+class UDP_notif_generator_legacy(UDP_notif_generator):
 
     def __init__(self, args):
-        self.source_ip = args.source_ip[0]
-        self.destination_ip = args.destination_ip[0]
-        self.source_port = int(args.source_port[0])
-        self.destination_port = int(args.destination_port[0])
-        self.initial_domain = args.initial_domain
-        self.additional_domains = args.additional_domains
-        self.message_size = args.message_size
-        self.message_amount = args.message_amount
-        if self.message_amount == 0:
-            self.message_amount = float('inf')
-        self.mtu = args.mtu
-        self.waiting_time = args.waiting_time
-        self.probability_of_loss = args.probability_of_loss
-        self.random_order = args.random_order
-        self.logging_level = args.logging_level
-        self.capture = args.capture
-        self.legacy = args.legacy == 1
+        super().__init__(args=args)
 
-        self.mock_generator = Mock_payload_reader()
-
-        self.pid = os.getpid()
-        self.logger = unyte_logger(self.logging_level, self.pid)
-        logging.info("Unyte scapy generator launched")
-
-    def save_pcap(self, filename, packet):
-        if self.capture == 1:
-            wrpcap(filename, packet, append=True)
-
-    def generate_mock_message(self):
-        return self.mock_generator.generate_message(self.message_size)
-
-    def generate_packet_list(self, current_message):
-        packet_list = []
-        packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN_legacy()/PAYLOAD()
-        packet.sport = self.source_port
-        packet.dport = self.destination_port
-        packet[PAYLOAD].message = current_message
-        packet[UDPN_legacy].message_length = UDPN_LEGACY_HEADER_LEN + len(packet[PAYLOAD].message)
-        packet_list.append(packet)
+    def __generate_packet_list(self, yang_push_msgs: list, encoding: str):
+        packet_list: list = []
+        for yang_push_payload in yang_push_msgs:
+            if (len(yang_push_payload) + UDPN_LEGACY_HEADER_LEN) > self.mtu:
+                logging.warning("MTU not used, no segmentation supported in legacy protocol")
+            packet = IP(src=self.source_ip, dst=self.destination_ip)/UDP()/UDPN_legacy()/PAYLOAD()
+            packet.sport = self.source_port
+            packet.dport = self.destination_port
+            packet[PAYLOAD].message = yang_push_payload
+            packet[UDPN_legacy].message_length = UDPN_LEGACY_HEADER_LEN + len(packet[PAYLOAD].message)
+            if encoding == 'json':
+                packet[UDPN_legacy].media_type = 2
+            elif encoding == 'xml':
+                packet[UDPN_legacy].media_type = 3
+            packet_list.append(packet)
         return packet_list
 
-    def forward_current_message(self, packet_list, current_domain_id):
+    def __forward_current_message(self, packet_list, current_domain_id):
         current_message_lost_packets = 0
-        if (self.random_order == 1):
-            random.shuffle(packet_list)
+        # if self.random_order == 1:
+        #     random.shuffle(packet_list)
 
-        msg_id = 0
+        if current_domain_id not in self.msg_id:
+            self.msg_id[current_domain_id] = 0
+
+        msg_id = self.msg_id[current_domain_id]
         for packet in packet_list:
             packet[UDPN_legacy].observation_domain_id = current_domain_id
             packet[UDPN_legacy].message_id = msg_id
@@ -73,36 +52,67 @@ class UDP_notif_generator_legacy:
             else:
                 current_message_lost_packets += 1
                 logging.info("simulating packet number 0 from message_id " + str(packet[UDPN_legacy].message_id) + " lost")
-            self.logger.log_packet(packet, self.legacy)
+            self.logger.log_packet(packet, True)
             msg_id += 1
-            self.save_pcap('filtered.pcap', packet)
+            self.save_pcap(packet)
+        self.msg_id[current_domain_id] = msg_id
 
         return current_message_lost_packets
 
-    def send_udp_notif(self):
-        timer_start = time.time()
+    def _stream_infinite_udp_notif(self, encoding: str):
+        obs_domain_id = self.initial_domain
 
-        self.logger.log_used_args(self)
-        current_message = self.generate_mock_message()
+        # Send subscription-started notification first
+        subs_started: str = ''
+        if encoding == 'json':
+            subs_started = self.mock_payload_reader.get_json_subscription_started_notif()
+        elif encoding == 'xml':
+            subs_started = self.mock_payload_reader.get_xml_subscription_started_notif()
+
+        udp_notif_msgs: list[list] = self.__generate_packet_list(yang_push_msgs=[subs_started], encoding=encoding)
+        for udp_notif_msg in udp_notif_msgs:
+            self.__forward_current_message(udp_notif_msg, obs_domain_id)
+
+        while True:
+            yang_push_msgs: list = []
+            if encoding == 'json':
+                yang_push_msgs: list = self.mock_payload_reader.get_json_push_update_notif(nb_payloads=1)
+            elif encoding == 'xml':
+                yang_push_msgs: list = self.mock_payload_reader.get_xml_push_update_notif(nb_payloads=1)
+
+            # Generate packet only once
+            packets_list: list = self.__generate_packet_list(yang_push_msgs=yang_push_msgs, encoding=encoding)
+            for packet in packets_list:
+                self.__forward_current_message(packet, obs_domain_id)
+                time.sleep(self.waiting_time)
+
+                obs_domain_id += 1
+                if obs_domain_id > (self.initial_domain + self.additional_domains):
+                    obs_domain_id = self.initial_domain
+
+
+    def _send_n_udp_notif(self, message_to_send: int, encoding: str):
+        payloads: list[str] = []
+
+        if encoding == 'xml':
+            payloads = self._get_n_xml_payloads(push_update_msgs=message_to_send)
+        elif encoding == 'json':
+            payloads = self._get_n_json_payloads(push_update_msgs=message_to_send)
 
         lost_packets = 0
         forwarded_packets = 0
 
         # Generate packet only once
-        packets_list = self.generate_packet_list(current_message)
+        packets_list: list = self.__generate_packet_list(yang_push_msgs=payloads, encoding=encoding)
         obs_domain_id = self.initial_domain
-        for _ in range(self.message_amount):
-            current_message_lost_packets = self.forward_current_message(packets_list, obs_domain_id)
-            forwarded_packets += len(packets_list) - current_message_lost_packets
+        for packet_group in packets_list:
+            current_message_lost_packets = self.__forward_current_message(packet_group, obs_domain_id)
+            forwarded_packets += 1 - current_message_lost_packets
             lost_packets += current_message_lost_packets
             time.sleep(self.waiting_time)
 
             obs_domain_id += 1
             if obs_domain_id > (self.initial_domain + self.additional_domains):
                 obs_domain_id = self.initial_domain
-
-        timer_end = time.time()
-        generation_total_duration = timer_end - timer_start
-        logging.warn('Sent ' + str(forwarded_packets) + ' in ' + str(generation_total_duration))
+        logging.warn('Sent ' + str(forwarded_packets) + ' packets')
         logging.info('Simulated %d lost packets from %d total packets', lost_packets, (forwarded_packets + lost_packets))
-        return forwarded_packets

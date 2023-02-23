@@ -1,0 +1,13 @@
+<notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
+  <eventTime>2022-09-02T10:59:55.32Z</eventTime>
+  <subscription-started xmlns="urn:ietf:params:xml:ns:yang:ietf-subscribed-notification">
+    <id>6666</id>
+    <datastore xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push"
+      xmlns:ds="urn:ietf:params:xml:ns:yang:ietf-datastores">ds:operational</datastore>
+    <transport xmlns:unt="urn:ietf:params:xml:ns:yang:ietf-udp-notif-transport">unt:udp-notif</transport>
+    <encoding>encode-xml</encoding>
+    <periodic xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push">
+      <period>100</period>
+    </periodic>
+  </subscription-started>
+</notification>

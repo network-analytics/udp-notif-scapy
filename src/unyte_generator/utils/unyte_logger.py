@@ -4,7 +4,7 @@ from unyte_generator.models.udpn_legacy import UDPN_legacy
 from unyte_generator.models.opt import SEGMENTATION_OPT
 from unyte_generator.models.payload import PAYLOAD
 
-class unyte_logger:
+class Unyte_logger:
 
     def __init__(self, logging_level, pid):
         self.set_logger_level(logging_level, pid)
