@@ -30,14 +30,15 @@ class Mock_payload_reader:
         self.cached_msg_payloads[path] = xml_payload
         return xml_payload
 
-    def get_xml_subscription_started_notif(self):
+    def get_xml_subscription_started_notif(self, push_update_msgs: int = 1):
         path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/subscription-started.xml'
         xml_mock_payload: dict = self.__read_xml(path)
         now = datetime.now()
+        msg_timestamp = now - timedelta(minutes=(push_update_msgs + 1))
         root = xml_mock_payload.documentElement
         eventTime_nodes = root.getElementsByTagName('eventTime')
         first_eventTime_node = eventTime_nodes[0]
-        first_eventTime_node.firstChild.data = now.strftime('%Y-%m-%dT%H:%M:%SZ')
+        first_eventTime_node.firstChild.data = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
         return root.toxml()
 
     def get_xml_push_update_notif(self, nb_payloads: int) -> list:
@@ -64,11 +65,12 @@ class Mock_payload_reader:
         first_eventTime_node.firstChild.data = now.strftime('%Y-%m-%dT%H:%M:%SZ')
         return root.toxml()
 
-    def get_json_subscription_started_notif(self):
+    def get_json_subscription_started_notif(self, push_update_msgs: int = 1):
         path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/json/notifications/subscription-started.json'
         json_mock_payload: dict = self.__read_json(path)
         now = datetime.now()
-        json_mock_payload['ietf-notification:notification']['eventTime'] = now.strftime('%Y-%m-%dT%H:%M:%SZ')
+        msg_timestamp = now - timedelta(minutes=(push_update_msgs + 1))
+        json_mock_payload['ietf-notification:notification']['eventTime'] = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
         return json.dumps(json_mock_payload)
 
     def get_json_subscription_modified_notif(self):
