@@ -8,6 +8,7 @@ from scapy.all import wrpcap
 from unyte_generator.utils.unyte_logger import Unyte_logger
 from unyte_generator.utils.unyte_message_gen import Mock_payload_reader
 
+
 class UDP_notif_generator:
 
     def __init__(self, args):
@@ -31,7 +32,7 @@ class UDP_notif_generator:
         if self.update_yang_module and self.message_amount == float('inf'):
             raise Exception("YANG updates are only supported for a finite value of messages. Please set a message_amount different from 0.")
 
-        self.mock_payload_reader = Mock_payload_reader()
+        self.mock_payload_reader: Mock_payload_reader = Mock_payload_reader()
 
         self.pid = os.getpid()
         self.logger = Unyte_logger(self.logging_level, self.pid)
@@ -44,53 +45,61 @@ class UDP_notif_generator:
 
     def _get_n_json_payloads(self, push_update_msgs: int) -> list:
         time_reference: datetime = datetime.now()
+        seq_nb = 0
         if self.update_yang_module:
             time_reference = time_reference - timedelta(minutes=(2*push_update_msgs))
         else:
             time_reference = time_reference - timedelta(minutes=(push_update_msgs))
 
         payloads: list[str] = []
-        payloads += [self.mock_payload_reader.get_json_subscription_started_notif(msg_timestamp=time_reference)]
-        for _ in range(push_update_msgs):
+        payloads += [self.mock_payload_reader.get_json_subscription_started_notif(msg_timestamp=time_reference, sequence_number=seq_nb)]
+        seq_nb += 1
+        for i in range(push_update_msgs):
             time_reference = time_reference + timedelta(minutes=1)
-            payloads += [self.mock_payload_reader.get_json_push_update_1_notif(msg_timestamp=time_reference)]
+            payloads += [self.mock_payload_reader.get_json_push_update_1_notif(msg_timestamp=time_reference, sequence_number=seq_nb+i)]
+        seq_nb += push_update_msgs
 
         if self.update_yang_module:
             time_reference = time_reference + timedelta(minutes=1)
-            payloads += [self.mock_payload_reader.get_json_subscription_modified_notif(msg_timestamp=time_reference)]
-
-            for _ in range(push_update_msgs):
+            payloads += [self.mock_payload_reader.get_json_subscription_modified_notif(msg_timestamp=time_reference, sequence_number=seq_nb)]
+            seq_nb += 1
+            for i in range(push_update_msgs):
                 time_reference = time_reference + timedelta(minutes=1)
-                payloads += [self.mock_payload_reader.get_json_push_update_2_notif(msg_timestamp=time_reference)]
+                payloads += [self.mock_payload_reader.get_json_push_update_2_notif(msg_timestamp=time_reference, sequence_number=seq_nb+i)]
+            seq_nb += push_update_msgs
 
         time_reference = time_reference + timedelta(minutes=1)
-        payloads += [self.mock_payload_reader.get_json_subscription_terminated_notif(msg_timestamp=time_reference)]
+        payloads += [self.mock_payload_reader.get_json_subscription_terminated_notif(msg_timestamp=time_reference, sequence_number=seq_nb)]
         return payloads
 
     def _get_n_xml_payloads(self, push_update_msgs: int) -> list:
         time_reference: datetime = datetime.now()
+        seq_nb = 0
         if self.update_yang_module:
             time_reference = time_reference - timedelta(minutes=(2*push_update_msgs))
         else:
             time_reference = time_reference - timedelta(minutes=(push_update_msgs))
-        
+
         payloads: list[str] = []
-        payloads += [self.mock_payload_reader.get_xml_subscription_started_notif(msg_timestamp=time_reference)]
+        payloads += [self.mock_payload_reader.get_xml_subscription_started_notif(msg_timestamp=time_reference, sequence_number=seq_nb)]
+
+        seq_nb += 1
         for i in range(push_update_msgs):
             time_reference = time_reference + timedelta(minutes=1)
-            # print(i)
-            payloads += [self.mock_payload_reader.get_xml_push_update_1_notif(msg_timestamp=time_reference)]
-        
+            payloads += [self.mock_payload_reader.get_xml_push_update_1_notif(msg_timestamp=time_reference, sequence_number=i+1)]
+        seq_nb += push_update_msgs
+
         if self.update_yang_module:
             time_reference = time_reference + timedelta(minutes=1)
-            payloads += [self.mock_payload_reader.get_xml_subscription_modified_notif(msg_timestamp=time_reference)]
+            payloads += [self.mock_payload_reader.get_xml_subscription_modified_notif(msg_timestamp=time_reference, sequence_number=seq_nb)]
+            seq_nb += 1
 
-            for _ in range(push_update_msgs):
+            for i in range(push_update_msgs):
                 time_reference = time_reference + timedelta(minutes=1)
-                payloads += [self.mock_payload_reader.get_xml_push_update_2_notif(msg_timestamp=time_reference)]
-        
+                payloads += [self.mock_payload_reader.get_xml_push_update_2_notif(msg_timestamp=time_reference, sequence_number=seq_nb+i)]
+            seq_nb += push_update_msgs
         time_reference = time_reference + timedelta(minutes=1)
-        payloads += [self.mock_payload_reader.get_xml_subscription_terminated_notif(msg_timestamp=time_reference)]
+        payloads += [self.mock_payload_reader.get_xml_subscription_terminated_notif(msg_timestamp=time_reference, sequence_number=seq_nb)]
         return payloads
 
     def _stream_infinite_udp_notif(self, encoding: str):

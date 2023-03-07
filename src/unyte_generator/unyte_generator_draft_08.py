@@ -99,12 +99,17 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
     def _stream_infinite_udp_notif(self, encoding: str):
         observation_domain_id = self.initial_domain
 
+        seq_nb = 0
+        # FIXME: TODO: timestamp and sequence number in payload: manage it here
+        # time_reference = datetime.now()
         # Send subscription-started notification first
         subs_started: str = ''
         if encoding == 'json':
             subs_started = self.mock_payload_reader.get_json_subscription_started_notif()
         elif encoding == 'xml':
-            subs_started = self.mock_payload_reader.get_xml_subscription_started_notif()
+            subs_started = self.mock_payload_reader.get_xml_subscription_started_notif(sequence_number=seq_nb)
+        
+        seq_nb += 1
 
         udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(yang_push_msgs=[subs_started], encoding=encoding)
         for udp_notif_msg in udp_notif_msgs:
@@ -113,12 +118,12 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
         while True:
             yang_push_payloads: list[str] = []
             if encoding == 'json':
-                yang_push_payloads = self.mock_payload_reader.get_json_push_update_notif(nb_payloads=1)
+                yang_push_payloads = self.mock_payload_reader.get_json_push_update_1_notif()
             elif encoding == 'xml':
-                yang_push_payloads = self.mock_payload_reader.get_xml_push_update_notif(nb_payloads=1)
+                yang_push_payloads = self.mock_payload_reader.get_xml_push_update_1_notif()
 
             # Generate packet only once
-            udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(yang_push_msgs=yang_push_payloads, encoding=encoding)
+            udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(yang_push_msgs=[yang_push_payloads], encoding=encoding)
 
             for udp_notif_msg in udp_notif_msgs:
                 self.__forward_current_message(udp_notif_msg, observation_domain_id)

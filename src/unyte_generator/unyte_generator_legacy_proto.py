@@ -64,6 +64,8 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
 
         # Send subscription-started notification first
         subs_started: str = ''
+        # FIXME: TODO: timestamp and sequence number in payload: manage it here
+        # time_reference = datetime.now()
         if encoding == 'json':
             subs_started = self.mock_payload_reader.get_json_subscription_started_notif()
         elif encoding == 'xml':
