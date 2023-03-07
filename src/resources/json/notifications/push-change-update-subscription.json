@@ -1,6 +1,8 @@
 {
   "ietf-notification:notification": {
     "eventTime": "2023-03-25T08:30:11.22Z",
+    "ietf-notification-sequencing:sysName": "example-router",
+    "ietf-notification-sequencing:sequenceNumber": 1,
     "ietf-yang-push:push-change-update": {
       "id": 2222,
       "datastore-contents": {
