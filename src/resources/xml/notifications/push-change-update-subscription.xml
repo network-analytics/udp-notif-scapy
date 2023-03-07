@@ -4,6 +4,9 @@
   <sequenceNumber xmlns="urn:ietf:params:xml:ns:yang:ietf-notification-sequencing">1</sequenceNumber>
   <push-change-update xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push">
     <id>2222</id>
+    <state-changed-observation-time xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push-netobs-timestamping">
+      2022-09-02T10:59:55.32Z
+    </state-changed-observation-time>
     <datastore-changes>
       <yang-patch>
         <patch-id>patch_54</patch-id>

@@ -76,8 +76,9 @@ class UDP_notif_generator:
         
         payloads: list[str] = []
         payloads += [self.mock_payload_reader.get_xml_subscription_started_notif(msg_timestamp=time_reference)]
-        for _ in range(push_update_msgs):
+        for i in range(push_update_msgs):
             time_reference = time_reference + timedelta(minutes=1)
+            # print(i)
             payloads += [self.mock_payload_reader.get_xml_push_update_1_notif(msg_timestamp=time_reference)]
         
         if self.update_yang_module:

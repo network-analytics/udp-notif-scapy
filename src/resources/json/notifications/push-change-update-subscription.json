@@ -5,6 +5,7 @@
     "ietf-notification-sequencing:sequenceNumber": 1,
     "ietf-yang-push:push-change-update": {
       "id": 2222,
+      "ietf-yang-push-netobs-timestamping:state-changed-observation-time": "2023-03-25T08:30:11.22Z",
       "datastore-contents": {
         "yang-patch": {
           "patch-id": "patch_54",

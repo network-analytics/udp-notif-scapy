@@ -5,6 +5,7 @@
     "ietf-notification-sequencing:sequenceNumber": 1,
     "ietf-yang-push:push-update": {
       "id": 2222,
+      "ietf-yang-push-netobs-timestamping:observation-time": "2023-03-25T08:30:11.22Z",
       "datastore-contents": {
         "ietf-subscribed-notifications:subscriptions": {
           "subscription": [
@@ -12,6 +13,8 @@
               "id": 2222,
               "ietf-yang-push:datastore": "ietf-datastores:operational",
               "ietf-yang-push:datastore-xpath-filter": "/ietf-subscribed-notifications:subscriptions",
+              "ietf-yang-push-revision:revision": "2019-09-09",
+              "ietf-distributed-notif:message-observation-domain-id": [1,2],
               "transport": "ietf-udp-notif-transport:udp-notif",
               "encoding": "encode-xml",
               "receivers": {
@@ -30,6 +33,8 @@
               "id": 6666,
               "ietf-yang-push:datastore": "ietf-datastores:operational",
               "ietf-yang-push:datastore-xpath-filter": "/ietf-interfaces:interfaces",
+              "ietf-yang-push-revision:revision": "2014-05-08",
+              "ietf-distributed-notif:message-observation-domain-id": [1,2],
               "transport": "ietf-udp-notif-transport:udp-notif",
               "encoding": "encode-json",
               "receivers": {
