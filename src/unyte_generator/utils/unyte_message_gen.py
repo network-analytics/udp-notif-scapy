@@ -2,6 +2,7 @@ import json
 import pathlib
 from datetime import datetime, timedelta
 from xml.dom import minidom
+from random import randint
 
 
 class Mock_payload_reader:
@@ -49,6 +50,7 @@ class Mock_payload_reader:
         path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/subscription-modified.xml'
         xml_mock_payload: dict = self.__read_xml(path)
         root = xml_mock_payload.documentElement
+        # Setting eventTime
         eventTime_nodes = root.getElementsByTagName('eventTime')
         first_eventTime_node = eventTime_nodes[0]
         first_eventTime_node.firstChild.data = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -61,6 +63,7 @@ class Mock_payload_reader:
         path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/subscription-terminated.xml'
         xml_mock_payload: dict = self.__read_xml(path)
         root = xml_mock_payload.documentElement
+        # Setting eventTime
         eventTime_nodes = root.getElementsByTagName('eventTime')
         first_eventTime_node = eventTime_nodes[0]
         first_eventTime_node.firstChild.data = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -73,26 +76,34 @@ class Mock_payload_reader:
         path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/push-update-1.xml'
         xml_mock_payload: dict = self.__read_xml(path)
         root = xml_mock_payload.documentElement
+        # Setting eventTime
         eventTime_nodes = root.getElementsByTagName('eventTime')
         first_eventTime_node = eventTime_nodes[0]
         first_eventTime_node.firstChild.data = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
         # Setting sequenceNumber
         seq_number_nodes = root.getElementsByTagName('sequenceNumber')
         seq_number_nodes[0].firstChild.data = sequence_number
+        # Setting observation-time
+        obs_time_nodes = root.getElementsByTagName('observation-time')
+        obs_time_nodes[0].firstChild.data = (msg_timestamp - timedelta(seconds=randint(0, 60))).strftime('%Y-%m-%dT%H:%M:%SZ')
         return root.toxml()
 
     def get_xml_push_update_2_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0) -> list:
         path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/push-update-2.xml'
         xml_mock_payload: dict = self.__read_xml(path)
         root = xml_mock_payload.documentElement
+        # Setting eventTime
         eventTime_nodes = root.getElementsByTagName('eventTime')
         first_eventTime_node = eventTime_nodes[0]
         first_eventTime_node.firstChild.data = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
         # Setting sequenceNumber
         seq_number_nodes = root.getElementsByTagName('sequenceNumber')
         seq_number_nodes[0].firstChild.data = sequence_number
+        # Setting observation-time
+        obs_time_nodes = root.getElementsByTagName('observation-time')
+        obs_time_nodes[0].firstChild.data = (msg_timestamp - timedelta(seconds=randint(0, 60))).strftime('%Y-%m-%dT%H:%M:%SZ')
         return root.toxml()
-    
+
     ####################################################### JSON #######################################################
 
     def get_json_subscription_started_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0):
@@ -121,6 +132,8 @@ class Mock_payload_reader:
         json_mock_payload: dict = self.__read_json(path)
         json_mock_payload['ietf-notification:notification']['eventTime'] = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
         json_mock_payload['ietf-notification:notification']['ietf-notification-sequencing:sequenceNumber'] = sequence_number
+        json_mock_payload['ietf-notification:notification']['ietf-yang-push:push-update']['ietf-yang-push-netobs-timestamping:observation-time'] = (
+            msg_timestamp - timedelta(seconds=randint(0, 60))).strftime('%Y-%m-%dT%H:%M:%SZ')
         return json.dumps(json_mock_payload)
 
     def get_json_push_update_2_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0) -> list:
@@ -128,4 +141,6 @@ class Mock_payload_reader:
         json_mock_payload: dict = self.__read_json(path)
         json_mock_payload['ietf-notification:notification']['eventTime'] = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
         json_mock_payload['ietf-notification:notification']['ietf-notification-sequencing:sequenceNumber'] = sequence_number
+        json_mock_payload['ietf-notification:notification']['ietf-yang-push:push-update']['ietf-yang-push-netobs-timestamping:observation-time'] = (
+            msg_timestamp - timedelta(seconds=randint(0, 60))).strftime('%Y-%m-%dT%H:%M:%SZ')
         return json.dumps(json_mock_payload)

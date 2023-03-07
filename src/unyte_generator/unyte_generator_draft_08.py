@@ -22,7 +22,7 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
     def __generate_udp_notif_packets(self, yang_push_msgs: list, encoding: str) -> list:
         payload_per_msg_len = self.mtu - UDPN_HEADER_LEN
 
-        udp_notif_packets: list = [] # list[list[msg]]
+        udp_notif_packets: list = []  # list[list[msg]]
         for payload in yang_push_msgs:
             # check if segmentation is needed
             if (len(payload) + UDPN_HEADER_LEN) > self.mtu:
@@ -69,7 +69,7 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
         current_message_lost_packets = 0
         # if self.random_order: # FIXME: random reorder
         #     random.shuffle(udp_notif_msgs)
-        
+
         if current_domain_id not in self.msg_id:
             self.msg_id[current_domain_id] = 0
 
@@ -102,7 +102,6 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
         observation_domain_id = self.initial_domain
 
         seq_nb = 0
-        # FIXME: TODO: timestamp and sequence number in payload: manage it here
         time_reference = datetime.now()
         # Send subscription-started notification first
         subs_started: str = ''
@@ -110,7 +109,7 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
             subs_started = self.mock_payload_reader.get_json_subscription_started_notif(msg_timestamp=time_reference, sequence_number=seq_nb)
         elif encoding == 'xml':
             subs_started = self.mock_payload_reader.get_xml_subscription_started_notif(msg_timestamp=time_reference, sequence_number=seq_nb)
-        
+
         seq_nb += 1
 
         udp_notif_msgs: list[list] = self.__generate_udp_notif_packets(yang_push_msgs=[subs_started], encoding=encoding)
@@ -168,4 +167,3 @@ class UDP_notif_generator_draft_08(UDP_notif_generator):
                 observation_domain_id = self.initial_domain
         logging.info('Sent ' + str(forwarded_packets) + ' messages')
         logging.info('Simulated %d lost packets from %d total packets', lost_packets, (forwarded_packets + lost_packets))
-
