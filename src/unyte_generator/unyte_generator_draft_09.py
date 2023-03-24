@@ -14,7 +14,7 @@ from unyte_generator.models.unyte_global import (UDPN_HEADER_LEN,
 from unyte_generator.unyte_generator import UDP_notif_generator
 
 
-class UDP_notif_generator_draft_08(UDP_notif_generator):
+class UDP_notif_generator_draft_09(UDP_notif_generator):
 
     def __init__(self, args):
         super().__init__(args=args)

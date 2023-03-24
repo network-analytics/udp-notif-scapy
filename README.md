@@ -1,6 +1,6 @@
 # Scapy generator for UDP-notif
 
-This repository implements a mock generator for YANG-push notifications using UDP-notif transport as defined in [draft-ietf-netconf-udp-notif-08](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-08). This mock generator supports IPv4.
+This repository implements a mock generator for YANG-push notifications using UDP-notif transport as defined in [draft-ietf-netconf-udp-notif-09](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-09). This mock generator supports IPv4.
 
 
 ### Supported IETF RFCs/drafts
@@ -10,7 +10,7 @@ The mock YANG-push notifications uses the following IETF RFCs and drafts. The su
 - [RFC5277](https://datatracker.ietf.org/doc/rfc5277): Netconf Event Notifications
 - [RFC8639](https://datatracker.ietf.org/doc/rfc8639): Subscription to YANG Notifications
 - [RFC8641](https://datatracker.ietf.org/doc/rfc8641/): Subscription to YANG Notifications for Datastore Updates (Configured Subscriptions only)
-- [draft-ietf-netconf-udp-notif-08](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-notif/08/): UDP-based Transport for Configured Subscriptions
+- [draft-ietf-netconf-udp-notif-09](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-notif/09/): UDP-based Transport for Configured Subscriptions
 - [draft-ietf-netconf-distributed-notif-06](https://datatracker.ietf.org/doc/draft-ietf-netconf-distributed-notif/06/): Subscription to Distributed Notifications
 - [draft-ahuang-netconf-notif-yang-01](https://datatracker.ietf.org/doc/draft-ahuang-netconf-notif-yang/01/): YANG model for NETCONF Event Notifications
 - [draft-tgraf-netconf-notif-sequencing-00](https://datatracker.ietf.org/doc/draft-tgraf-netconf-notif-sequencing/00/): Support of Hostname and Sequencing in YANG Notifications

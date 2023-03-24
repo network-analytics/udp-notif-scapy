@@ -2,7 +2,7 @@
 from unyte_generator.unyte_argparser import Unyte_argparser
 from unyte_generator.unyte_generator import UDP_notif_generator
 from unyte_generator.unyte_generator_legacy_proto import UDP_notif_generator_legacy
-from unyte_generator.unyte_generator_draft_08 import UDP_notif_generator_draft_08
+from unyte_generator.unyte_generator_draft_09 import UDP_notif_generator_draft_09
 
 
 if __name__ == "__main__":
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # use old udp-notif headers: draft-ietf-netconf-udp-pub-channel-05
     if args.legacy:
         mock_generator = UDP_notif_generator_legacy(args=args)
-    else: # draft-ietf-netconf-udp-notif-08
-        mock_generator = UDP_notif_generator_draft_08(args=args)
+    else: # draft-ietf-netconf-udp-notif-09
+        mock_generator = UDP_notif_generator_draft_09(args=args)
 
     mock_generator.send_udp_notif()
