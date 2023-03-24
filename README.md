@@ -88,6 +88,3 @@ Examples of configuration files can be found in [configurations](./src/resources
 
 ## Docker container
 See [Docker docs](docker)
-
-## Launch multiple simulations
-- `./launch_multiple.sh <number_messages>` : launches multiple instances of the generator simuling multiple source ips and ports

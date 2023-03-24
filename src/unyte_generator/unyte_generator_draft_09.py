@@ -44,8 +44,8 @@ class UDP_notif_generator_draft_09(UDP_notif_generator):
                 packet.dport = self.destination_port
                 if udp_notif_segmented_pckts == 1:
                     packet[UDPN].header_length = UDPN_HEADER_LEN
-                    packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
                     packet[PAYLOAD].message = payload
+                    packet[UDPN].message_length = packet[UDPN].header_length + len(packet[PAYLOAD].message)
                 else:
                     packet[UDPN].header_length = UDPN_HEADER_LEN + UDPN_SEGMENTATION_OPT_LEN
                     packet[SEGMENTATION_OPT].segment_id = packet_increment
