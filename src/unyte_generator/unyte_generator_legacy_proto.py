@@ -64,13 +64,14 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
         obs_domain_id = self.initial_domain
         time_reference = datetime.now()
         seq_nb = 0
+        obs_domain_ids = [obs_id for obs_id in range(self.initial_domain, self.initial_domain + self.additional_domains + 1, 1)]
 
         # Send subscription-started notification first
         subs_started: str = ''
         if encoding == 'json':
-            subs_started = self.mock_payload_reader.get_json_subscription_started_notif(msg_timestamp=time_reference, sequence_number=seq_nb)
+            subs_started = self.mock_payload_reader.get_json_subscription_started_notif(msg_timestamp=time_reference, sequence_number=seq_nb, observation_domain_ids=obs_domain_ids)
         elif encoding == 'xml':
-            subs_started = self.mock_payload_reader.get_xml_subscription_started_notif()
+            subs_started = self.mock_payload_reader.get_xml_subscription_started_notif(msg_timestamp=time_reference, sequence_number=seq_nb, observation_domain_ids=obs_domain_ids)
         seq_nb += 1
 
         udp_notif_msgs: list[list] = self.__generate_packet_list(yang_push_msgs=[subs_started], encoding=encoding)
