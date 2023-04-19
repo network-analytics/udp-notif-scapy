@@ -53,9 +53,9 @@ class Mock_payload_reader:
             newScriptText = xml_mock_payload.createTextNode(str(obs_id))
             new_obs_id.appendChild(newScriptText)
             subs_started_nodes[0].appendChild(new_obs_id)
-        return root.toxml()
+        return root.toprettyxml(indent='', newl='')
 
-    def get_xml_subscription_modified_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0):
+    def get_xml_subscription_modified_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0, observation_domain_ids: list = []):
         path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/xml/notifications/subscription-modified.xml'
         xml_mock_payload: dict = self.__read_xml(path)
         root = xml_mock_payload.documentElement
@@ -66,6 +66,15 @@ class Mock_payload_reader:
         # Setting sequenceNumber
         seq_number_nodes = root.getElementsByTagName('sequenceNumber')
         seq_number_nodes[0].firstChild.data = sequence_number
+        subs_started_nodes = root.getElementsByTagName('subscription-modified')
+        obs_domain_id_nodes = root.getElementsByTagName('message-observation-domain-id')
+        subs_started_nodes[0].removeChild(obs_domain_id_nodes[0])
+        for obs_id in observation_domain_ids:
+            new_obs_id = xml_mock_payload.createElement("message-observation-domain-id")
+            new_obs_id.setAttribute("xmlns", 'urn:ietf:params:xml:ns:yang:ietf-distributed-notif')
+            newScriptText = xml_mock_payload.createTextNode(str(obs_id))
+            new_obs_id.appendChild(newScriptText)
+            subs_started_nodes[0].appendChild(new_obs_id)
         return root.toxml()
 
     def get_xml_subscription_terminated_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0):
@@ -123,11 +132,12 @@ class Mock_payload_reader:
         json_mock_payload['ietf-notification:notification']['ietf-subscribed-notification:subscription-started']['ietf-distributed-notif:message-observation-domain-id'] = observation_domain_ids
         return json.dumps(json_mock_payload)
 
-    def get_json_subscription_modified_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0):
+    def get_json_subscription_modified_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0, observation_domain_ids: list = []):
         path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/json/notifications/subscription-modified.json'
         json_mock_payload: dict = self.__read_json(path)
         json_mock_payload['ietf-notification:notification']['eventTime'] = msg_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
         json_mock_payload['ietf-notification:notification']['ietf-notification-sequencing:sequenceNumber'] = sequence_number
+        json_mock_payload['ietf-notification:notification']['ietf-subscribed-notification:subscription-modified']['ietf-distributed-notif:message-observation-domain-id'] = observation_domain_ids
         return json.dumps(json_mock_payload)
 
     def get_json_subscription_terminated_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0):

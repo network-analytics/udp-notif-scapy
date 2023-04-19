@@ -1,6 +1,6 @@
 # Scapy generator for UDP-notif
 
-This repository implements a mock generator for YANG-push notifications using UDP-notif transport as defined in [draft-ietf-netconf-udp-notif-09](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-09). This mock generator supports IPv4.
+This repository implements a mock generator for YANG-push notifications using UDP-notif transport as defined in [draft-ietf-netconf-udp-notif-09](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-notif/09/). This mock generator supports IPv4.
 
 
 ### Supported IETF RFCs/drafts
@@ -38,21 +38,21 @@ $ sudo python3 src/main.py <src_ipv4> <dst_ipv4> <port_src> <port_dst>
 
 ### Optional arguments
 
-- `--initial-domain x` or `-i x` : (Integer) initial observation domain id, x >= 0, Default: `0`
+- `--initial-domain <domain>` or `-i <domain>` : (Integer) initial observation domain id, `<domain>` >= 0, Default: `0`
 
-- `--additional-domains x` or `-a x` : (Integer) amount of additional observation domains, x >= 0, Default: `0`
+- `--additional-domains <obs_nb>` or `-a <obs_nb>` : (Integer) amount of additional observation domains, `<obs_nb>` >= 0, Default: `0`
 
-- `--message-amount x` or `-n x` : (Integer) amount of messages to send, x >= 1, Default: `1`
+- `--message-amount <msgs>` or `-n <msgs>` : (Integer) amount of notification messages to send, `<msgs>` >= 1, Default: `1`
 
 - `--encoding <encoding>` or `-e <encoding>`: (String) encoding of the UDP-notif payload. Options: [`json`, `xml`]. Default: `json`.
 
-- `--mtu x` or `-m x` : (Integer) maximum transmission unit, 16 < x < 65535, Default: `1500`
+- `--mtu <value>` or `-m <value>` : (Integer) maximum transmission unit, 16 < `<value>` < 65535, Default: `1500`
 
-- `--waiting-time f` or `-w f` : (Float) waiting time (in seconds) between two messages, x > 0, Default: `0`
+- `--waiting-time <time>` or `-w <time>` : (Float) waiting time (in seconds) between two messages, `<time>` > 0, Default: `0`
 
-- `--probability-of-loss f` or `-p f` : (Float) segment loss probability, 0 <= x < 1, Default: `0`
+- `--probability-of-loss <loss>` or `-p <loss>` : (Float) segment loss probability, 0 <= `<loss>` < 1, Default: `0`
 
-- `--logging-level s` or `-l s` : (String) logging level, s = none or s = warning or s = info or s = debug, Default: `info`
+- `--logging-level <level>` or `-l <level>` : (String) logging level, `<level>` = none or `<level>` = warning or `<level>` = info or `<level>` = debug, Default: `info`
 
 - `--capture <path>` or `-c <path>` : (String) Save a wireshark capture of the forwarded packets in the `<path>`. Default: `None` (disabled).
 
