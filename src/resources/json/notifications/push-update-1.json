@@ -11,6 +11,7 @@
           {
             "interface": {
               "name": "eth0",
+              "type": "iana-if-type:ethernetCsmacd",
               "oper-status": "up"
             }
           }

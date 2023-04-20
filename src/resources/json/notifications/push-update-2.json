@@ -11,8 +11,9 @@
           {
             "interface": {
               "name": "eth0",
+              "type": "iana-if-type:ethernetCsmacd",
               "oper-status": "up",
-              "ietf-mock-interfaces:packet-count": 150
+              "mtu": 1500
             }
           }
         ]

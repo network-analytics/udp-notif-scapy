@@ -80,6 +80,83 @@ This generator can also simulate a YANG module update in YANG-push.
 $ sudo python3 src/main.py 192.0.2.65 192.0.2.66 10001 10010 -upd
 ```
 
+#### Used YANG modules
+
+The YANG modules used in [yang/interfaces](./yangs/interfaces/).
+
+The mock generator emulates a subscription to the Xpath `/if:interfaces` of [ietf-interfaces@2018-02-20.yang](./yangs/interfaces/ietf-interfaces%402018-02-20.yang)
+
+```yang
+module: ietf-interfaces
+  +--rw interfaces
+     +--rw interface* [name]
+        +--rw name                        string
+        +--rw description?                string
+        +--rw type                        identityref
+        +--rw enabled?                    boolean
+        +--rw link-up-down-trap-enable?   enumeration {if-mib}?
+        +--ro admin-status                enumeration {if-mib}?
+        +--ro oper-status                 enumeration
+        +--ro last-change?                yang:date-and-time
+        +--ro if-index                    int32 {if-mib}?
+        +--ro phys-address?               yang:phys-address
+        +--ro higher-layer-if*            interface-ref
+        +--ro lower-layer-if*             interface-ref
+        +--ro speed?                      yang:gauge64
+        +--ro statistics
+           +--ro discontinuity-time    yang:date-and-time
+           +--ro in-octets?            yang:counter64
+           +--ro in-unicast-pkts?      yang:counter64
+           +--ro in-broadcast-pkts?    yang:counter64
+           +--ro in-multicast-pkts?    yang:counter64
+           +--ro in-discards?          yang:counter32
+           +--ro in-errors?            yang:counter32
+           +--ro in-unknown-protos?    yang:counter32
+           +--ro out-octets?           yang:counter64
+           +--ro out-unicast-pkts?     yang:counter64
+           +--ro out-broadcast-pkts?   yang:counter64
+           +--ro out-multicast-pkts?   yang:counter64
+           +--ro out-discards?         yang:counter32
+           +--ro out-errors?           yang:counter32
+```
+
+After the update of the subscription the YANG module, the generator emulates pushing a new versioned of the same YANG module with a new leaf `mtu`. This new YANG module is defined in [ietf-interfaces@2023-04-30.yang](./yangs/interfaces/ietf-interfaces%402023-04-30.yang). Note that this new YANG module is defined for test purposes and is not part of any IETF standard RFC.
+
+```yang
+module: ietf-interfaces
+  +--rw interfaces
+     +--rw interface* [name]
+        +--rw name                        string
+        +--rw description?                string
+        +--rw mtu                         uint32
+        +--rw type                        identityref
+        +--rw enabled?                    boolean
+        +--rw link-up-down-trap-enable?   enumeration {if-mib}?
+        +--ro admin-status                enumeration {if-mib}?
+        +--ro oper-status                 enumeration
+        +--ro last-change?                yang:date-and-time
+        +--ro if-index                    int32 {if-mib}?
+        +--ro phys-address?               yang:phys-address
+        +--ro higher-layer-if*            interface-ref
+        +--ro lower-layer-if*             interface-ref
+        +--ro speed?                      yang:gauge64
+        +--ro statistics
+           +--ro discontinuity-time    yang:date-and-time
+           +--ro in-octets?            yang:counter64
+           +--ro in-unicast-pkts?      yang:counter64
+           +--ro in-broadcast-pkts?    yang:counter64
+           +--ro in-multicast-pkts?    yang:counter64
+           +--ro in-discards?          yang:counter32
+           +--ro in-errors?            yang:counter32
+           +--ro in-unknown-protos?    yang:counter32
+           +--ro out-octets?           yang:counter64
+           +--ro out-unicast-pkts?     yang:counter64
+           +--ro out-broadcast-pkts?   yang:counter64
+           +--ro out-multicast-pkts?   yang:counter64
+           +--ro out-discards?         yang:counter32
+           +--ro out-errors?           yang:counter32
+```
+
 ## NETCONF configuration XML examples
 
 As defined in [RFC8641](https://datatracker.ietf.org/doc/rfc8641), configured subscriptions are configured via Netconf RPC `<edit-config>`.

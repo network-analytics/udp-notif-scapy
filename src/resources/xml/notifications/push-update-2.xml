@@ -11,8 +11,9 @@
       <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
         <interface>
           <name>eth0</name>
+          <type xmlns:ianaift="urn:ietf:params:xml:ns:yang:iana-if-type">ianaift:ethernetCsmacd</type>
           <oper-status>up</oper-status>
-          <packet-count xmlns="urn:ietf:params:xml:ns:yang:ietf-mock-interfaces">150</packet-count>
+          <mtu>1500</mtu>
         </interface>
       </interfaces>
     </datastore-contents>
