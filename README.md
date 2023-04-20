@@ -163,5 +163,9 @@ As defined in [RFC8641](https://datatracker.ietf.org/doc/rfc8641), configured su
 
 Examples of configuration files can be found in [configurations](./src/resources/xml/subscription/).
 
+## YANG push notifications workflow
+
+Please find more information about YANG push [here](https://github.com/network-analytics/draft-daisy-kafka-yang-integration/blob/main/yang-push-workflow-01.pdf).
+
 ## Docker container
 See [Docker docs](docker)
