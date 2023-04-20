@@ -1,0 +1,21 @@
+<notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
+  <eventTime>2022-09-02T10:59:55.32Z</eventTime>
+  <sysName xmlns="urn:ietf:params:xml:ns:yang:ietf-notification-sequencing">example-router</sysName>
+  <sequenceNumber xmlns="urn:ietf:params:xml:ns:yang:ietf-notification-sequencing">1</sequenceNumber>
+  <push-update xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push">
+    <id>6666</id>
+    <observation-time xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push-netobs-timestamping">
+      2022-09-02T10:59:55.32Z
+    </observation-time>
+    <datastore-contents>
+      <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
+        <interface>
+          <name>eth0</name>
+          <type xmlns:ianaift="urn:ietf:params:xml:ns:yang:iana-if-type">ianaift:ethernetCsmacd</type>
+          <oper-status>up</oper-status>
+          <mtu>1500</mtu>
+        </interface>
+      </interfaces>
+    </datastore-contents>
+  </push-update>
+</notification>

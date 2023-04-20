@@ -1,7 +1,12 @@
 <notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
   <eventTime>2022-09-02T10:59:55.32Z</eventTime>
+  <sysName xmlns="urn:ietf:params:xml:ns:yang:ietf-notification-sequencing">example-router</sysName>
+  <sequenceNumber xmlns="urn:ietf:params:xml:ns:yang:ietf-notification-sequencing">1</sequenceNumber>
   <push-update xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push">
     <id>2222</id>
+    <observation-time xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push-netobs-timestamping">
+      2022-09-02T10:59:55.32Z
+    </observation-time>
     <datastore-contents>
       <subscriptions xmlns="urn:ietf:params:xml:ns:yang:ietf-subscribed-notifications">
         <subscription>
@@ -10,11 +15,16 @@
             xmlns:ds="urn:ietf:params:xml:ns:yang:ietf-datastores">ds:operational</datastore>
           <datastore-xpath-filter xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push"
             xmlns:sn="urn:ietf:params:xml:ns:yang:ietf-subscribed-notifications">/sn:subscriptions</datastore-xpath-filter>
+          <revision xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push-revision">2019-09-09</revision>
+          <message-observation-domain-id xmlns="urn:ietf:params:xml:ns:yang:ietf-distributed-notif">1</message-observation-domain-id>
+          <message-observation-domain-id xmlns="urn:ietf:params:xml:ns:yang:ietf-distributed-notif">2</message-observation-domain-id>
           <transport xmlns:unt="urn:ietf:params:xml:ns:yang:ietf-udp-notif-transport">unt:udp-notif</transport>
           <encoding>encode-xml</encoding>
+          <configured-subscription-state>valid</configured-subscription-state>
           <receivers>
             <receiver>
               <name>subscription-specific-receiver-def</name>
+              <state>active</state>
               <receiver-instance-ref xmlns="urn:ietf:params:xml:ns:yang:ietf-subscribed-notif-receivers">global-udp-notif-receiver-def</receiver-instance-ref>
             </receiver>
           </receivers>
@@ -27,11 +37,16 @@
           <datastore xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push">ds:operational</datastore>
           <datastore-xpath-filter xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push"
             xmlns:if="urn:ietf:params:xml:ns:yang:ietf-interfaces">/if:interfaces</datastore-xpath-filter>
+          <revision xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push-revision">2014-05-08</revision>
+          <message-observation-domain-id xmlns="urn:ietf:params:xml:ns:yang:ietf-distributed-notif">1</message-observation-domain-id>
+          <message-observation-domain-id xmlns="urn:ietf:params:xml:ns:yang:ietf-distributed-notif">2</message-observation-domain-id>
           <transport xmlns:unt="urn:ietf:params:xml:ns:yang:ietf-udp-notif-transport">unt:udp-notif</transport>
           <encoding>encode-json</encoding>
+          <configured-subscription-state>valid</configured-subscription-state>
           <receivers>
             <receiver>
               <name>subscription-specific-receiver-def</name>
+              <state>active</state>
               <receiver-instance-ref xmlns="urn:ietf:params:xml:ns:yang:ietf-subscribed-notif-receivers">global-udp-notif-receiver-def</receiver-instance-ref>
             </receiver>
           </receivers>

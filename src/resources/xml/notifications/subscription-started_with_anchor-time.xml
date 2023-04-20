@@ -1,9 +1,16 @@
 <notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
   <eventTime>2022-09-02T10:59:55.32Z</eventTime>
+  <sysName xmlns="urn:ietf:params:xml:ns:yang:ietf-notification-sequencing">example-router</sysName>
+  <sequenceNumber xmlns="urn:ietf:params:xml:ns:yang:ietf-notification-sequencing">1</sequenceNumber>
   <subscription-started xmlns="urn:ietf:params:xml:ns:yang:ietf-subscribed-notification">
     <id>6666</id>
     <datastore xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push"
       xmlns:ds="urn:ietf:params:xml:ns:yang:ietf-datastores">ds:operational</datastore>
+    <datastore-xpath-filter xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push"
+      xmlns:if="urn:ietf:params:xml:ns:yang:ietf-interfaces">/if:interfaces</datastore-xpath-filter>
+    <revision xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push-revision">2014-05-08</revision>
+    <message-observation-domain-id xmlns="urn:ietf:params:xml:ns:yang:ietf-distributed-notif">1</message-observation-domain-id>
+    <message-observation-domain-id xmlns="urn:ietf:params:xml:ns:yang:ietf-distributed-notif">2</message-observation-domain-id>
     <transport xmlns:unt="urn:ietf:params:xml:ns:yang:ietf-udp-notif-transport">unt:udp-notif</transport>
     <encoding>encode-xml</encoding>
     <periodic xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-push">
