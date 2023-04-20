@@ -120,7 +120,7 @@ module: ietf-interfaces
            +--ro out-errors?           yang:counter32
 ```
 
-After the update of the subscription the YANG module, the generator emulates pushing a new versioned of the same YANG module with a new leaf `mtu`. This new YANG module is defined in [ietf-interfaces@2023-04-30.yang](./yangs/interfaces/ietf-interfaces%402023-04-30.yang). Note that this new YANG module is defined for test purposes and is not part of any IETF standard RFC.
+After the update of the subscription, the generator emulates pushing a new versioned of the same YANG module with a new leaf `mtu`. This new YANG module is defined in [ietf-interfaces@2023-04-30.yang](./yangs/interfaces/ietf-interfaces%402023-04-30.yang). Note that this new YANG module is defined for test purposes and is not part of any IETF standard RFC.
 
 ```yang
 module: ietf-interfaces

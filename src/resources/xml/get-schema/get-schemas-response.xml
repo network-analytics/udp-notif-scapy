@@ -4,22 +4,22 @@
     <netconf-state xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring">
       <schemas>
         <schema>
-          <identifier>foo</identifier>
-          <version>2020-10-10</version>
+          <identifier>ietf-interfaces</identifier>
+          <version>2018-02-20</version>
           <format>yang</format>
-          <namespace>http://example.com/foo</namespace>
+          <namespace>http://example.com/ietf-interfaces</namespace>
           <location>
-            http://example.com/schema/foo@2020-10-10.yang
+            http://example.com/schema/ietf-interfaces@2018-02-20.yang
           </location>
           <location>NETCONF</location>
         </schema>
         <schema>
-          <identifier>bar-types</identifier>
-          <version>2008-06-01</version>
+          <identifier>ietf-interfaces</identifier>
+          <version>2023-04-30</version>
           <format>yang</format>
-          <namespace>http://example.com/bar</namespace>
+          <namespace>http://example.com/ietf-interfaces</namespace>
           <location>
-            http://example.com/schema/bar-types@2008-06-01.yang
+            http://example.com/schema/ietf-interfaces@2023-04-30.yang
           </location>
           <location>NETCONF</location>
         </schema>
