@@ -27,7 +27,9 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
             packet.dport = self.destination_port
             packet[PAYLOAD].message = yang_push_payload
             packet[UDPN_legacy].message_length = UDPN_LEGACY_HEADER_LEN + len(packet[PAYLOAD].message)
-            if encoding == 'json':
+            if encoding == 'cbor':
+                packet[UDPN_legacy].media_type = 1
+            elif encoding == 'json':
                 packet[UDPN_legacy].media_type = 2
             elif encoding == 'xml':
                 packet[UDPN_legacy].media_type = 3
@@ -53,7 +55,7 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
             else:
                 current_message_lost_packets += 1
                 logging.info("simulating packet number 0 from message_id " + str(packet[UDPN_legacy].message_id) + " lost")
-            self.logger.log_packet(packet, True)
+            self.logger.log_legacy_packet(packet)
             msg_id += 1
             self.save_pcap(packet)
         self.msg_id[current_domain_id] = msg_id
@@ -72,6 +74,8 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
             subs_started = self.mock_payload_reader.get_json_subscription_started_notif(msg_timestamp=time_reference, sequence_number=seq_nb, observation_domain_ids=obs_domain_ids)
         elif encoding == 'xml':
             subs_started = self.mock_payload_reader.get_xml_subscription_started_notif(msg_timestamp=time_reference, sequence_number=seq_nb, observation_domain_ids=obs_domain_ids)
+        elif encoding == 'cbor':
+            subs_started = self.mock_payload_reader.get_cbor_subscription_started_notif(msg_timestamp=time_reference, sequence_number=seq_nb, observation_domain_ids=obs_domain_ids)
         seq_nb += 1
 
         udp_notif_msgs: list[list] = self.__generate_packet_list(yang_push_msgs=[subs_started], encoding=encoding)
@@ -84,6 +88,8 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
                 yang_push_msgs: list = self.mock_payload_reader.get_json_push_update_1_notif(msg_timestamp=time_reference, sequence_number=seq_nb)
             elif encoding == 'xml':
                 yang_push_msgs: list = self.mock_payload_reader.get_xml_push_update_1_notif(msg_timestamp=time_reference, sequence_number=seq_nb)
+            elif encoding == 'cbor':
+                yang_push_msgs: list = self.mock_payload_reader.get_cbor_push_update_1_notif(msg_timestamp=time_reference, sequence_number=seq_nb)
 
             # Generate packet only once
             packets_list: list = self.__generate_packet_list(yang_push_msgs=[yang_push_msgs], encoding=encoding)
@@ -104,6 +110,8 @@ class UDP_notif_generator_legacy(UDP_notif_generator):
             payloads = self._get_n_xml_payloads(push_update_msgs=message_to_send)
         elif encoding == 'json':
             payloads = self._get_n_json_payloads(push_update_msgs=message_to_send)
+        elif encoding == 'cbor':
+            payloads = self._get_n_cbor_payloads(push_update_msgs=message_to_send)
 
         lost_packets = 0
         forwarded_packets = 0

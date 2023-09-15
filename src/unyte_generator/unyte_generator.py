@@ -104,6 +104,36 @@ class UDP_notif_generator:
         payloads += [self.mock_payload_reader.get_xml_subscription_terminated_notif(msg_timestamp=time_reference, sequence_number=seq_nb)]
         return payloads
 
+    def _get_n_cbor_payloads(self, push_update_msgs: int) -> list:
+        time_reference: datetime = datetime.now()
+        seq_nb = 0
+        if self.update_yang_module:
+            time_reference = time_reference - timedelta(minutes=(2*push_update_msgs))
+        else:
+            time_reference = time_reference - timedelta(minutes=(push_update_msgs))
+
+        obs_domain_ids = [obs_id for obs_id in range(self.initial_domain, self.initial_domain + self.additional_domains + 1, 1)]
+        payloads: list[str] = []
+        payloads += [self.mock_payload_reader.get_cbor_subscription_started_notif(msg_timestamp=time_reference, sequence_number=seq_nb, observation_domain_ids=obs_domain_ids)]
+        seq_nb += 1
+        for i in range(push_update_msgs):
+            time_reference = time_reference + timedelta(minutes=1)
+            payloads += [self.mock_payload_reader.get_cbor_push_update_1_notif(msg_timestamp=time_reference, sequence_number=seq_nb+i)]
+        seq_nb += push_update_msgs
+
+        if self.update_yang_module:
+            time_reference = time_reference + timedelta(minutes=1)
+            payloads += [self.mock_payload_reader.get_cbor_subscription_modified_notif(msg_timestamp=time_reference, sequence_number=seq_nb, observation_domain_ids=obs_domain_ids)]
+            seq_nb += 1
+            for i in range(push_update_msgs):
+                time_reference = time_reference + timedelta(minutes=1)
+                payloads += [self.mock_payload_reader.get_cbor_push_update_2_notif(msg_timestamp=time_reference, sequence_number=seq_nb+i)]
+            seq_nb += push_update_msgs
+
+        time_reference = time_reference + timedelta(minutes=1)
+        payloads += [self.mock_payload_reader.get_cbor_subscription_terminated_notif(msg_timestamp=time_reference, sequence_number=seq_nb)]
+        return payloads
+
     def _stream_infinite_udp_notif(self, encoding: str):
         raise ValueError("Abstract method: must be implemented")
 

@@ -1,6 +1,7 @@
 import json
+import cbor2
 import pathlib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from xml.dom import minidom
 from random import randint
 
@@ -30,6 +31,20 @@ class Mock_payload_reader:
 
         self.cached_msg_payloads[path] = xml_payload
         return xml_payload
+
+    def __read_cbor(self, path) -> dict:
+        if path in self.cached_msg_payloads:
+            return self.cached_msg_payloads[path]
+
+        cbor_payload = None
+        with open(path, 'rb') as fp:
+            cbor_payload = cbor2.load(fp)
+        
+        # Convert to python object
+        cbor_payload = cbor2.loads(cbor_payload)
+
+        self.cached_msg_payloads[path] = cbor_payload
+        return cbor_payload
 
     ####################################################### XML #######################################################
 
@@ -164,3 +179,46 @@ class Mock_payload_reader:
         json_mock_payload['ietf-notification:notification']['ietf-yang-push:push-update']['ietf-yang-push-netobs-timestamping:observation-time'] = (
             msg_timestamp - timedelta(seconds=randint(0, 60))).strftime('%Y-%m-%dT%H:%M:%SZ')
         return json.dumps(json_mock_payload)
+
+    ####################################################### CBOR #######################################################
+
+    def get_cbor_subscription_started_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0, observation_domain_ids: list = []):
+        path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/cbor/notifications/subscription-started.cbor'
+        cbor_mock_payload: dict = self.__read_cbor(path)
+        cbor_mock_payload['ietf-notification:notification']['eventTime'] = msg_timestamp
+        cbor_mock_payload['ietf-notification:notification']['ietf-notification-sequencing:sequenceNumber'] = sequence_number
+        cbor_mock_payload['ietf-notification:notification']['ietf-subscribed-notification:subscription-started']['ietf-distributed-notif:message-observation-domain-id'] = observation_domain_ids
+        return cbor2.dumps(cbor_mock_payload, timezone=timezone.utc, date_as_datetime=True)
+
+    def get_cbor_subscription_modified_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0, observation_domain_ids: list = []):
+        path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/cbor/notifications/subscription-modified.cbor'
+        cbor_mock_payload: dict = self.__read_cbor(path)
+        cbor_mock_payload['ietf-notification:notification']['eventTime'] = msg_timestamp
+        cbor_mock_payload['ietf-notification:notification']['ietf-notification-sequencing:sequenceNumber'] = sequence_number
+        cbor_mock_payload['ietf-notification:notification']['ietf-subscribed-notification:subscription-modified']['ietf-distributed-notif:message-observation-domain-id'] = observation_domain_ids
+        return cbor2.dumps(cbor_mock_payload, timezone=timezone.utc, date_as_datetime=True)
+
+    def get_cbor_subscription_terminated_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0):
+        path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/cbor/notifications/subscription-terminated.cbor'
+        cbor_mock_payload: dict = self.__read_cbor(path)
+        cbor_mock_payload['ietf-notification:notification']['eventTime'] = msg_timestamp
+        cbor_mock_payload['ietf-notification:notification']['ietf-notification-sequencing:sequenceNumber'] = sequence_number
+        return cbor2.dumps(cbor_mock_payload, timezone=timezone.utc, date_as_datetime=True)
+
+    def get_cbor_push_update_1_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0) -> list:
+        path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/cbor/notifications/push-update-1.cbor'
+        cbor_mock_payload: dict = self.__read_cbor(path)
+        cbor_mock_payload['ietf-notification:notification']['eventTime'] = msg_timestamp
+        cbor_mock_payload['ietf-notification:notification']['ietf-notification-sequencing:sequenceNumber'] = sequence_number
+        cbor_mock_payload['ietf-notification:notification']['ietf-yang-push:push-update']['ietf-yang-push-netobs-timestamping:observation-time'] = (
+            msg_timestamp - timedelta(seconds=randint(0, 60)))
+        return cbor2.dumps(cbor_mock_payload, timezone=timezone.utc, date_as_datetime=True)
+
+    def get_cbor_push_update_2_notif(self, msg_timestamp: datetime = datetime.now(), sequence_number: int = 0) -> list:
+        path = str(pathlib.Path(__file__).parent.parent.parent.absolute()) + '/resources/cbor/notifications/push-update-2.cbor'
+        cbor_mock_payload: dict = self.__read_cbor(path)
+        cbor_mock_payload['ietf-notification:notification']['eventTime'] = msg_timestamp
+        cbor_mock_payload['ietf-notification:notification']['ietf-notification-sequencing:sequenceNumber'] = sequence_number
+        cbor_mock_payload['ietf-notification:notification']['ietf-yang-push:push-update']['ietf-yang-push-netobs-timestamping:observation-time'] = (
+            msg_timestamp - timedelta(seconds=randint(0, 60)))
+        return cbor2.dumps(cbor_mock_payload, timezone=timezone.utc, date_as_datetime=True)

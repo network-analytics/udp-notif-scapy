@@ -1,1 +1,3 @@
 scapy==2.4.4
+cbor2==5.4.6
+simple-hexdump==0.0.1
