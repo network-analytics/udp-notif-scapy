@@ -1,6 +1,6 @@
 # Scapy generator for UDP-notif
 
-This repository implements a mock generator for YANG-push notifications using UDP-notif transport as defined in [draft-ietf-netconf-udp-notif-09](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-notif/09/). This mock generator supports IPv4.
+This repository implements a mock generator for YANG-push notifications using UDP-notif transport as defined in [draft-ietf-netconf-udp-notif-11](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-notif/11/). This mock generator supports IPv4.
 
 
 ### Supported IETF RFCs/drafts
@@ -10,15 +10,15 @@ The mock YANG-push notifications uses the following IETF RFCs and drafts. The su
 - [RFC5277](https://datatracker.ietf.org/doc/rfc5277): Netconf Event Notifications
 - [RFC8639](https://datatracker.ietf.org/doc/rfc8639): Subscription to YANG Notifications
 - [RFC8641](https://datatracker.ietf.org/doc/rfc8641/): Subscription to YANG Notifications for Datastore Updates (Configured Subscriptions only)
-- [draft-ietf-netconf-udp-notif-09](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-notif/09/): UDP-based Transport for Configured Subscriptions
-- [draft-ietf-netconf-distributed-notif-06](https://datatracker.ietf.org/doc/draft-ietf-netconf-distributed-notif/06/): Subscription to Distributed Notifications
-- [draft-ahuang-netconf-notif-yang-01](https://datatracker.ietf.org/doc/draft-ahuang-netconf-notif-yang/01/): YANG model for NETCONF Event Notifications
+- [draft-ietf-netconf-udp-notif-11](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-notif/11/): UDP-based Transport for Configured Subscriptions
+- [draft-ietf-netconf-distributed-notif-08](https://datatracker.ietf.org/doc/draft-ietf-netconf-distributed-notif/08/): Subscription to Distributed Notifications
+- [draft-ahuang-netconf-notif-yang-03](https://datatracker.ietf.org/doc/draft-ahuang-netconf-notif-yang/03/): YANG model for NETCONF Event Notifications
 - [draft-tgraf-netconf-notif-sequencing-00](https://datatracker.ietf.org/doc/draft-tgraf-netconf-notif-sequencing/00/): Support of Hostname and Sequencing in YANG Notifications
 - [draft-tgraf-yang-push-observation-time-00](https://datatracker.ietf.org/doc/draft-tgraf-yang-push-observation-time/00/): Support of Network Observation Timestamping in YANG Notifications
-- [draft-tgraf-netconf-yang-notifications-versioning-03](https://datatracker.ietf.org/doc/draft-tgraf-netconf-yang-notifications-versioning/03/): Support of Versioning in YANG Notifications Subscription
+- [draft-ietf-netconf-yang-notifications-versioning-03](https://datatracker.ietf.org/doc/draft-ietf-netconf-yang-notifications-versioning/03/): Support of Versioning in YANG Notifications Subscription
 
 
-## Dependencies (Tested in Python 3.6.8)
+## Dependencies (Tested in Python 3.9.16)
 Required libraries are specified in `src/requirements.txt`
 ```shell
 $ pip install -r src/requirements.txt
@@ -44,7 +44,7 @@ $ sudo python3 src/main.py <src_ipv4> <dst_ipv4> <port_src> <port_dst>
 
 - `--message-amount <msgs>` or `-n <msgs>` : (Integer) amount of notification messages to send, `<msgs>` >= 1, Default: `1`
 
-- `--encoding <encoding>` or `-e <encoding>`: (String) encoding of the UDP-notif payload. Options: [`json`, `xml`]. Default: `json`.
+- `--encoding <encoding>` or `-e <encoding>`: (String) encoding of the UDP-notif payload. Options: [`json`, `xml`, `cbor`]. Default: `json`.
 
 - `--mtu <value>` or `-m <value>` : (Integer) maximum transmission unit, 16 < `<value>` < 65535, Default: `1500`
 
@@ -56,7 +56,7 @@ $ sudo python3 src/main.py <src_ipv4> <dst_ipv4> <port_src> <port_dst>
 
 - `--capture <path>` or `-c <path>` : (String) Save a wireshark capture of the forwarded packets in the `<path>`. Default: `None` (disabled).
 
-- `--legacy` or `-leg` : Generate legacy headers as defined in [draft-ietf-netconf-udp-pub-channel-05](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-pub-channel/), /!\ No segmentation is possible. Default: Disabled.
+- `--legacy` or `-leg` : Generate legacy headers as defined in [draft-ietf-netconf-udp-pub-channel-05](https://datatracker.ietf.org/doc/draft-ietf-netconf-udp-pub-channel/), :warning: No segmentation is possible. Default: Disabled.
 
 - `--update-yang` or `-upd`: Simulate a YANG module update to a backward compatible YANG module. Default: Disabled.
 

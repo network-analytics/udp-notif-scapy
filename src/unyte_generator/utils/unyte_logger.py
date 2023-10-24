@@ -3,6 +3,7 @@ from unyte_generator.models.udpn import UDPN
 from unyte_generator.models.udpn_legacy import UDPN_legacy
 from unyte_generator.models.opt import SEGMENTATION_OPT
 from unyte_generator.models.payload import PAYLOAD
+from hexdump import hexdump
 
 class Unyte_logger:
 
@@ -45,18 +46,43 @@ class Unyte_logger:
         logging.info("packet segment id = " + str(packet[SEGMENTATION_OPT].segment_id))
         logging.info("packet last = " + str(packet[SEGMENTATION_OPT].last))
 
-    def log_packet(self, packet, legacy: bool):
+    def log_legacy_packet(self, packet):
         logging.info("---------------- packet ----------------")
-        if legacy:
-            self.log_header_udpn_legacy(packet)
+        self.log_header_udpn_legacy(packet)
+
+        if packet[UDPN_legacy].media_type == 1:
+            logging.debug("packet message = cbor_binary_encoded[")
+            print(hexdump(packet[PAYLOAD].message))
+            logging.debug("]")
         else:
-            self.log_header_udpn(packet)
-        logging.debug("packet message = " + str(packet[PAYLOAD].message.decode()))
+            logging.debug("packet message = " + packet[PAYLOAD].message.decode())
+
+        logging.info("-------------- end packet --------------")
+
+
+    def log_packet(self, packet):
+        logging.info("---------------- packet ----------------")
+        self.log_header_udpn(packet)
+
+        if packet[UDPN].media_type == 3:
+            logging.debug("packet message = cbor_binary_encoded[")
+            print(hexdump(packet[PAYLOAD].message))
+            logging.debug("]")
+        else:
+            logging.debug("packet message = " + packet[PAYLOAD].message.decode())
+
         logging.info("-------------- end packet --------------")
 
     def log_segment(self, packet, packet_increment):
         logging.info("---------- packet (segment " + str(packet_increment) + ") ----------")
         self.log_header_udpn(packet)
         self.log_header_opt(packet)
-        logging.debug("packet message = " + str(packet[PAYLOAD].message.decode()))
+
+        if packet[UDPN].media_type == 3:
+            logging.debug("packet message = cbor_binary_encoded[")
+            print(hexdump(packet[PAYLOAD].message))
+            logging.debug("]")
+        else:
+            logging.debug("packet message = " + packet[PAYLOAD].message.decode())
+
         logging.info("-------- end packet (segment " + str(packet_increment) + ") --------")
